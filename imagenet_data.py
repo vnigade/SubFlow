@@ -1,11 +1,14 @@
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 import os
+import numpy as np
 
 # tf.enable_eager_execution()
 
 IMAGENET_MEAN = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32)
 NUM_CLASSES = 1000
+
+debug = 1
 
 
 def _tf_record_parser(serialized_example):
@@ -37,10 +40,14 @@ def _tf_record_parser(serialized_example):
 
 def _preprocessing(serialized_example, resize_image_size):
     img, label, filename = _tf_record_parser(serialized_example)
+
+    # img_centered = img
     img_resized = tf.image.resize_images(img, resize_image_size)
     img_centered = tf.subtract(img_resized, IMAGENET_MEAN)
+
     # RGB -> BGR
     img_bgr = img_centered[:, :, ::-1]
+    # img_bgr = img_centered
 
     label_onehot = tf.one_hot(label, NUM_CLASSES)
     print(str(filename))
@@ -66,19 +73,41 @@ def dataset_generator(data_dir: str, type: str, resize_image_size=[227, 227], ba
     return dataset
 
 
+def check_with_eager(dataset):
+    for img, label, filename in dataset:
+        print(filename)
+
+    exit()
+
+
 if __name__ == "__main__":
     data_dir = "/var/scratch/mreisser/imagenet/ILSVRC2012_img_val_tf_records"
     dataset = dataset_generator(
-        data_dir, type="validation", batch_size=2)
+        data_dir, type="validation", batch_size=1)
+
+    # check_with_eager(dataset)
 
     iter = dataset.make_one_shot_iterator()
-    validation_init_op = iter.make_initializer()
     next_element = iter.get_next()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         try:
             while True:
-                x_batch, y_batch, filename_batch = sess.run(next_element)
+                x_batch, y_batch, filename_batch = sess.run(
+                    next_element)
+
+                x_batch = np.squeeze(x_batch, axis=0)
+                x_batch = x_batch.astype(np.uint8)
+
+                print(type(x_batch), x_batch.shape)
+                if debug <= 10:
+                    # Create a files name
+                    from PIL import Image
+                    im = Image.fromarray(x_batch)
+                    im.save(
+                        f"/home/vne500/scratch/packages/SubFlow/debug_{debug}.jpg")
+
+                    debug += 1
                 print(filename_batch)
         except tf.errors.OutOfRangeError:
             pass

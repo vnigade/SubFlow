@@ -3,6 +3,7 @@ import os
 import numpy as np
 from imagenet_data import NUM_CLASSES, dataset_generator
 import copy
+import time
 
 
 class AlexNet:
@@ -203,9 +204,12 @@ class AlexNet:
                                relu=False,
                                dropout=False, layer_no=layer_no)
 
-        self._neuron_names_lst = [self._input.name, conv1.name,
-                                  conv2.name, conv3.name, conv4.name, conv5.name,
-                                  fc6.name, fc7.name, fc8.name]
+        # self._neuron_names_lst = [self._input.name, conv1.name,
+        #                           conv2.name, conv3.name, conv4.name, conv5.name,
+        #                           fc6.name, fc7.name, fc8.name]
+
+        self._neuron_names_lst = [conv1.name, conv2.name, conv3.name, conv4.name, conv5.name,
+                                  fc6.name, fc7.name]
 
         return fc8
 
@@ -368,8 +372,10 @@ class AlexNet:
                 print(output_importance_sum[i].shape)
                 # @TODO: Very if we need to transpose.
                 # This is the input or conv layer.
-                output_importance_sum[i] = np.transpose(
-                    output_importance_sum[i], (2, 0, 1))
+                # The data_format is 'NHWC'. Therefore, we don't have to transpose.
+                # But if data_format is 'NCHW' uncomment the following code statement.
+                # output_importance_sum[i] = np.transpose(
+                #     output_importance_sum[i], (2, 0, 1))
 
 
 class AlexMaskNet:
@@ -378,8 +384,12 @@ class AlexMaskNet:
 
     def __init__(self, num_classes=1000, weights_file="./weights/bvlc_alexnet.npy") -> None:
         self.num_classes = num_classes
+        self._weights_file = weights_file
         self.network_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                        'networks')
+                                        'networks', self.NETWORK_NAME)
+        if not os.path.exists(self.network_dir):
+            os.makedirs(self.network_dir)
+
         self.network_file_name = 'network_' + self.NETWORK_NAME
         self.network_file_path = os.path.join(
             self.network_dir, self.network_file_name)
@@ -395,22 +405,23 @@ class AlexMaskNet:
         self._neuron_names_lst = []
         self._activation_mask_lst = []
 
-        with tf.Graph().as_default() as graph:
-            with tf.Session(graph=graph) as sess:
-                # Build network
-                self.fc8 = self.build_network()
+        # Build network
+        self.fc8 = self.build_network()
 
-                # Initialize all variables
-                sess.run(tf.global_variables_initializer())
+        # with tf.Graph().as_default() as graph:
+        #     with tf.Session(graph=graph) as sess:
 
-                # Load weight parameters
-                self.load_parameters(sess, weights_file)
+        #         # Initialize all variables
+        #         sess.run(tf.global_variables_initializer())
 
-                # compute importance
-                # self.load_importance(sess, graph)
+        #         # Load weight parameters
+        #         self.load_parameters(sess, weights_file)
 
-                self.validate_accuracy(sess)
-                # self.save_network(sess)
+        #         # compute importance
+        #         # self.compute_importance(sess, graph, sample_size=100)
+
+        #         self.validate_accuracy(sess)
+        #         # self.save_network(sess)
 
     def conv_layer(self, prev_layer, filter_height, filter_width, num_filters, output_dim, padding, layer_no, strides=1, groups=1):
         channels = int((prev_layer.shape)[-1])
@@ -571,13 +582,16 @@ class AlexMaskNet:
                             relu=False,
                             dropout=False, layer_no=layer_no)
 
-        self._neuron_names_lst = [self._input.name, conv1.name,
+        # self._neuron_names_lst = [self._input.name, conv1.name,
+        #                           conv2.name, conv3.name, conv4.name, conv5.name,
+        #                           fc6.name, fc7.name, fc8.name]
+        self._neuron_names_lst = [conv1.name,
                                   conv2.name, conv3.name, conv4.name, conv5.name,
-                                  fc6.name, fc7.name, fc8.name]
+                                  fc6.name, fc7.name]
 
         return fc8
 
-    def load_parameters(self, sess,  weights_file):
+    def load_parameters(self, sess):
         """Load weights from file into network.
         As the weights from http://www.cs.toronto.edu/~guerzhoy/tf_alexnet/
         come as a dict of lists (e.g. weights['conv1'] is a list) and not as
@@ -587,7 +601,7 @@ class AlexMaskNet:
         # weights_file = "/home/vinod/remote_files/das5/scratch/packages/SubFlow/weights/bvlc_alexnet.npy"
         # Load the weights into memory
         weights_dict = np.load(
-            weights_file, allow_pickle=True, encoding='bytes').item()
+            self._weights_file, allow_pickle=True, encoding='bytes').item()
 
         # Loop over all layer names stored in the weights dict
         for op_name in weights_dict:
@@ -617,10 +631,8 @@ class AlexMaskNet:
     def train_network(self):
         pass
 
-    def get_importance(self):
-
     def _validate_accuracy(self, sess, activation_masks):
-        batch_size = 1
+        batch_size = 8
         data_dir = "/var/scratch/mreisser/imagenet/ILSVRC2012_img_val_tf_records"
         dataset = dataset_generator(
             data_dir, type="validation", batch_size=batch_size)
@@ -651,10 +663,12 @@ class AlexMaskNet:
                 tensor_values = [x_batch, y_batch, 1.0]
                 tensor_values = tensor_values + activation_masks
                 acc, y_score = sess.run([accuracy, score], feed_dict={
-                    t: d for t, d in zip(tensor_feed, tensor_values)})
+                    t: v for t, v in zip(tensor_feed, tensor_values)})
 
                 print(f"Shape: gt: {y_batch.shape}, pred: {y_score.shape}")
-                print(f"gt: {np.argmax(y_batch)}, pred: {np.argmax(y_score)}")
+                for i in range(batch_size):
+                    print(
+                        f"gt: {np.argmax(y_batch[i])}, pred: {np.argmax(y_score[i])}")
                 test_acc += acc
                 test_count += 1
         except tf.errors.OutOfRangeError:
@@ -664,6 +678,7 @@ class AlexMaskNet:
 
         test_acc /= test_count
         print("Validation Accuracy = {:.4f}".format(test_acc))
+        return test_acc
 
     def save_importance(self, importance):
         if not os.path.exists(self.importance_file_path):
@@ -682,7 +697,7 @@ class AlexMaskNet:
 
         np.save(self.importance_file_path, new_importance, allow_pickle=True)
 
-    def compute_importance(self, sess, graph, sample_size=1000):
+    def compute_importance(self, sess,  sample_size=1000):
         batch_size = 1
         input = self._input
         output_score = self.fc8
@@ -695,10 +710,19 @@ class AlexMaskNet:
                                                         labels=labels_gt))
 
         # Get the list of input, conv, fc and output layer
+        graph = tf.get_default_graph()
         neurons_lst = []
         for neuron_names in self._neuron_names_lst:
             neuron = graph.get_tensor_by_name(neuron_names)
             neurons_lst.append(neuron)
+
+        activation_mask = []
+        for i, tensor in enumerate(self._activation_mask_lst):
+            shape = tensor.shape
+            activation_mask.append(np.ones(shape=shape))
+
+        tensor_feed = [self._input, labels_gt, self._keep_prob]
+        tensor_feed = tensor_feed + self._activation_mask_lst
 
         data_dir = "/var/scratch/mreisser/imagenet/ILSVRC2012_img_val_tf_records"
         dataset = dataset_generator(
@@ -707,27 +731,44 @@ class AlexMaskNet:
         iter = dataset.make_one_shot_iterator()
         next_batch = iter.get_next()
 
+        importance_lst = []
+        for neuron in neurons_lst:
+            gradient = tf.gradients(cross_entropy, neuron)
+            hessian_approximate = tf.square(gradient[0])
+            importance = hessian_approximate * tf.square(neuron)
+            importance_lst.append(importance)
         output_importance_sum = [None] * len(neurons_lst)
+
         try:
             for k in range(sample_size):
+                t1 = time.time()
                 x_batch, y_batch, filename_batch = sess.run(next_batch)
+                t2 = time.time()
+                tensor_values = [x_batch, y_batch, 1.0]
+                tensor_values = tensor_values + activation_mask
+
                 print(filename_batch)
 
+                t3 = time.time()
                 for i in range(len(neurons_lst)):
-                    gradient = tf.gradients(cross_entropy, neurons_lst[i])
-                    hessian_approximate = tf.square(gradient[0])
-                    importance = hessian_approximate * \
-                        tf.square(neurons_lst[i])
+                    # gradient = tf.gradients(cross_entropy, neurons_lst[i])
+                    # hessian_approximate = tf.square(gradient[0])
+                    # importance = hessian_approximate * \
+                    #     tf.square(neurons_lst[i])
 
-                    print(importance)
-                    s = sess.run(importance, feed_dict={self._input: x_batch,
-                                                        labels_gt: y_batch,
-                                                        self._keep_prob: 1.})
+                    # print(importance_lst[i])
+                    s = sess.run(importance_lst[i], feed_dict={
+                        t: v for t, v in zip(tensor_feed, tensor_values)})
 
+                    # print(s)
                     if output_importance_sum[i] is None:
                         output_importance_sum[i] = s
                     else:
                         output_importance_sum[i] += s
+                t4 = time.time()
+
+                print(f"{k}/{sample_size}\nSample loading time: {(t2 - t1) * 1e3}, "
+                      f" Importance computation: {(t4 - t3) * 1e3}")
         except tf.errors.OutOfRangeError:
             pass
         except Exception as e:
@@ -740,17 +781,69 @@ class AlexMaskNet:
                 print(output_importance_sum[i].shape)
                 # @TODO: Very if we need to transpose.
                 # This is the input or conv layer.
-                output_importance_sum[i] = np.transpose(
-                    output_importance_sum[i], (2, 0, 1))
+                # The data_format is 'NHWC'. Therefore, we don't have to transpose.
+                # But if data_format is 'NCHW' uncomment the following code statement.
+                # output_importance_sum[i] = np.transpose(
+                #     output_importance_sum[i], (2, 0, 1))
+
+        np.save(self.importance_file_path,
+                output_importance_sum, allow_pickle=True)
+
+    def get_activation_mask(self, importance, utilization):
+        total_active_neurons = 0
+        total_neurons = 0
+        activation_list = []
+        # for i, tensor in enumerate(self._activation_mask_lst):
+        #     shape = tensor.shape
+        #     activation_list.append(np.ones(shape=shape))
+
+        # return activation_list
+
+        # It does not include the input and output layer.
+        for i in range(0, len(importance)):
+            length = np.prod(importance[i].shape)
+            activation = np.zeros(length, dtype=np.int32)
+            num_of_active_neurons = int(np.floor(length * utilization))
+            # ascending sort indices
+            arg_sort = np.argsort(importance[i].ravel())
+            # descending sort indeces
+            arg_sort = arg_sort[::-1]
+            arg_sort = arg_sort[:num_of_active_neurons]
+
+            activation[arg_sort] = 1
+            activation = np.reshape(activation, importance[i].shape)
+            total_active_neurons += num_of_active_neurons
+            total_neurons += length
+
+            activation_list.append(activation)
+
+        real_utilization = float(total_active_neurons) / total_neurons
+        print('utilization %f' % utilization)
+
+        return activation_list
 
     def validate_accuracy(self, sess):
-        # create an activation mask for utilization 1.0
-        activation_mask = []
-        for tensor in self._activation_mask_lst:
-            shape = tensor.shape
-            activation_mask.append(np.ones(shape=shape))
+        importance = np.load(self.importance_file_path, allow_pickle=True)
+        # importance = []
+        acc_per_utilization = {}
+        for i in range(1, 11):
+            utilization = 0.1 * i
+            print(f"Validating accuracy for utilization {utilization}")
+            activation_mask_values = self.get_activation_mask(
+                importance, utilization=utilization)
+            activation_mask = []
+            for i, tensor in enumerate(self._activation_mask_lst):
+                if i < len(activation_mask_values):
+                    activation_mask.append(activation_mask_values[i])
+                else:
+                    shape = tensor.shape
+                    activation_mask.append(np.ones(shape=shape))
 
-        self._validate_accuracy(sess, activation_mask)
+            acc = self._validate_accuracy(sess, activation_mask)
+            acc_per_utilization[utilization] = acc
+
+        for util, acc in acc_per_utilization.items():
+            print(util, acc)
 
 
 class AlexSubNet:

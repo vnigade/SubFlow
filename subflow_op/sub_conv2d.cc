@@ -551,13 +551,17 @@ REGISTER_OP("SubConv")
 
 	shape_inference::DimensionHandle batch = c->Dim(c->input(0), 0);
 	shape_inference::DimensionHandle channel = c->Dim(c->input(1), 0);
+    // shape_inference::DimensionHandle stride = c->Dim(c->input(2), 1);
 	shape_inference::DimensionHandle height;
 	c->Subtract(c->Dim(c->input(0), 2), c->Dim(c->input(1), 2), &height);
 	c->Divide(height, shape_inference::DimensionOrConstant(1), true, &height);
+	// c->Divide(height, stride, true, &height);
 	c->Add(height, shape_inference::DimensionOrConstant(1), &height);
+
 	shape_inference::DimensionHandle width;
 	c->Subtract(c->Dim(c->input(0), 3), c->Dim(c->input(1), 3), &width);
-	c->Divide(width, shape_inference::DimensionOrConstant(1), true, &width);
+        c->Divide(width, shape_inference::DimensionOrConstant(1), true, &width);
+	// c->Divide(width, stride, true, &width);
 	c->Add(width, shape_inference::DimensionOrConstant(1), &width);
 	c->set_output(0, c->MakeShape({batch, channel, height, width}));
 	return Status::OK();

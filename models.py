@@ -408,21 +408,6 @@ class AlexMaskNet:
         # Build network
         self.fc8 = self.build_network()
 
-        # with tf.Graph().as_default() as graph:
-        #     with tf.Session(graph=graph) as sess:
-
-        #         # Initialize all variables
-        #         sess.run(tf.global_variables_initializer())
-
-        #         # Load weight parameters
-        #         self.load_parameters(sess, weights_file)
-
-        #         # compute importance
-        #         # self.compute_importance(sess, graph, sample_size=100)
-
-        #         self.validate_accuracy(sess)
-        #         # self.save_network(sess)
-
     def conv_layer(self, prev_layer, filter_height, filter_width, num_filters, output_dim, padding, layer_no, strides=1, groups=1):
         channels = int((prev_layer.shape)[-1])
         shape = [filter_height, filter_width,
@@ -598,7 +583,6 @@ class AlexMaskNet:
         dict of dicts (e.g. weights['conv1'] is a dict with keys 'weights' &
         'biases') we need a special load function
         """
-        # weights_file = "/home/vinod/remote_files/das5/scratch/packages/SubFlow/weights/bvlc_alexnet.npy"
         # Load the weights into memory
         weights_dict = np.load(
             self._weights_file, allow_pickle=True, encoding='bytes').item()
@@ -631,7 +615,7 @@ class AlexMaskNet:
     def train_network(self):
         pass
 
-    def _validate_accuracy(self, sess, activation_masks):
+    def _validate_accuracy(self, sess, importance, utilization):
         batch_size = 8
         data_dir = "/var/scratch/mreisser/imagenet/ILSVRC2012_img_val_tf_records"
         dataset = dataset_generator(
@@ -656,19 +640,27 @@ class AlexMaskNet:
 
         test_count = 0
         test_acc = 1
+
+        RANDOM_MASK = True
+        activation_masks = self.get_activation_mask(
+            importance, utilization, random_mask=RANDOM_MASK)
+
         try:
             while True:
                 x_batch, y_batch, filename_batch = sess.run(next_batch)
-                print(filename_batch)
+                if RANDOM_MASK:
+                    activation_masks = self.get_activation_mask(
+                        importance, utilization, random_mask=RANDOM_MASK)
+                # print(filename_batch)
                 tensor_values = [x_batch, y_batch, 1.0]
                 tensor_values = tensor_values + activation_masks
                 acc, y_score = sess.run([accuracy, score], feed_dict={
                     t: v for t, v in zip(tensor_feed, tensor_values)})
 
-                print(f"Shape: gt: {y_batch.shape}, pred: {y_score.shape}")
-                for i in range(batch_size):
-                    print(
-                        f"gt: {np.argmax(y_batch[i])}, pred: {np.argmax(y_score[i])}")
+                # print(f"Shape: gt: {y_batch.shape}, pred: {y_score.shape}")
+                # for i in range(batch_size):
+                #     print(
+                #         f"gt: {np.argmax(y_batch[i])}, pred: {np.argmax(y_score[i])}")
                 test_acc += acc
                 test_count += 1
         except tf.errors.OutOfRangeError:
@@ -789,7 +781,21 @@ class AlexMaskNet:
         np.save(self.importance_file_path,
                 output_importance_sum, allow_pickle=True)
 
-    def get_activation_mask(self, importance, utilization):
+    def get_activation_mask(self, importance, utilization, random_mask=False):
+        def sorted_indices(importance, num_of_active_neurons):
+            # ascending sort indices
+            arg_sort = np.argsort(importance.ravel())
+            # descending sort indeces
+            arg_sort = arg_sort[::-1]
+            arg_sort = arg_sort[:num_of_active_neurons]
+            return arg_sort
+
+        def random_indices(importance, num_of_active_neurons):
+            length = np.prod(importance.shape)
+            indices = np.random.choice(
+                np.arange(length), num_of_active_neurons, replace=False)
+            return indices
+
         total_active_neurons = 0
         total_neurons = 0
         activation_list = []
@@ -804,21 +810,25 @@ class AlexMaskNet:
             length = np.prod(importance[i].shape)
             activation = np.zeros(length, dtype=np.int32)
             num_of_active_neurons = int(np.floor(length * utilization))
-            # ascending sort indices
-            arg_sort = np.argsort(importance[i].ravel())
-            # descending sort indeces
-            arg_sort = arg_sort[::-1]
-            arg_sort = arg_sort[:num_of_active_neurons]
-
-            activation[arg_sort] = 1
+            if not random_mask:
+                indices = sorted_indices(importance[i], num_of_active_neurons)
+            else:
+                indices = random_indices(importance[i], num_of_active_neurons)
+            activation[indices] = 1
             activation = np.reshape(activation, importance[i].shape)
             total_active_neurons += num_of_active_neurons
             total_neurons += length
 
             activation_list.append(activation)
 
+        # For last output layer
+        for i, tensor in enumerate(self._activation_mask_lst):
+            if i >= len(activation_list):
+                shape = tensor.shape
+                activation_list.append(np.ones(shape=shape))
+
         real_utilization = float(total_active_neurons) / total_neurons
-        print('utilization %f' % utilization)
+        # print('utilization %f' % utilization)
 
         return activation_list
 
@@ -829,17 +839,7 @@ class AlexMaskNet:
         for i in range(1, 11):
             utilization = 0.1 * i
             print(f"Validating accuracy for utilization {utilization}")
-            activation_mask_values = self.get_activation_mask(
-                importance, utilization=utilization)
-            activation_mask = []
-            for i, tensor in enumerate(self._activation_mask_lst):
-                if i < len(activation_mask_values):
-                    activation_mask.append(activation_mask_values[i])
-                else:
-                    shape = tensor.shape
-                    activation_mask.append(np.ones(shape=shape))
-
-            acc = self._validate_accuracy(sess, activation_mask)
+            acc = self._validate_accuracy(sess, importance, utilization)
             acc_per_utilization[utilization] = acc
 
         for util, acc in acc_per_utilization.items():

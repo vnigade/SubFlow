@@ -10,7 +10,7 @@ SubFlow is implemented based on Python and TensorFlow. The TensorFlow version sh
 
 **Step 1.** Install [Python (>= 2.7)](https://www.python.org/downloads/).
 
-**Step 2.** Install [Tensorflow (<= 1.13.2)](https://www.tensorflow.org/).
+**Step 2.** Install [Tensorflow GPU (<= 1.13.2)](https://www.tensorflow.org/).
 
 **Step 3.** Install [NVIDIA CUDA (>= 10.0)](https://developer.nvidia.com/cuda-downloads).
 

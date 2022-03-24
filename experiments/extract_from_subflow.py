@@ -1,5 +1,7 @@
 """
-Loads a pre-trained network and extracts its weights and biases.
+Loads a pre-trained SubFlow network and extracts its weights and biases.
+
+todo: Currently only MNIST SubFlow networks have been tried.
 """
 import argparse
 import numpy as np
@@ -8,6 +10,7 @@ import pathlib
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
+
 
 # todo: comment this in when running on DAS
 # sub_conv2d_library = tf.load_op_library("./sub_conv2d.so")

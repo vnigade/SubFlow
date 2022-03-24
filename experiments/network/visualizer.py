@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.colorbar import Colorbar
 from matplotlib.gridspec import GridSpec
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from .network import Network
 
@@ -39,6 +39,83 @@ class Visualizer:
         return Visualizer.array_to_image(bias)
 
     @staticmethod
+    def plot_array(array: np.ndarray,
+                   output_file: str,
+                   dpi: int = 100,
+                   show_figure: bool = False) -> None:
+        """
+        Plots a numpy array using MATLAB plot and saves it to image file.
+
+        :param array: A numpy array.
+        :param output_file: The filename for the output image.
+        :param dpi: Figure DPI.
+        :param show_figure: Flag whether to also show the image figure.
+        :return:
+        """
+
+        image = Visualizer.array_to_image(array)
+
+        figure = plt.figure(dpi=dpi)
+        plot = plt.imshow(image)
+        figure.colorbar(plot)
+
+        plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
+        if show_figure:
+            plt.show()
+
+    @staticmethod
+    def plot_arrays(arrays: List[np.ndarray],
+                    output_file: str,
+                    data_range: Optional[Tuple[float, float]] = None,
+                    same_range: bool = False,
+                    font_size: int = 4,
+                    dpi: int = 600,
+                    title_padding: int = 0,
+                    show_figure: bool = False) -> None:
+        """
+        Plots the given numpy arrays in a row using MATLAB plot and saves it to image file.
+
+        :param arrays: A list of numpy arrays.
+        :param output_file: The filename for the output image.
+        :param data_range: Minimum and maximum value for the data.
+        :param same_range: Flag whether to compute the data range automatically if data_range is not provided.
+        :param font_size: Font size.
+        :param dpi: Figure DPI.
+        :param title_padding: Title padding.
+        :param show_figure: Flag whether to also show the image figure.
+        :return:
+        """
+
+        count = len(arrays)
+        figure = plt.figure(figsize=(count, 1), constrained_layout=True, dpi=dpi)
+        grid = GridSpec(1, count + 1, figure, width_ratios=[3] * count + [1])
+
+        min_value = None
+        max_value = None
+        if data_range:
+            min_value, max_value = data_range
+        elif same_range:
+            all_data = np.concatenate([array.flatten() for array in arrays])
+            min_value, max_value = np.min(all_data), np.max(all_data)
+
+        last_image = None
+        for i, array in enumerate(arrays):
+            image = Visualizer.array_to_image(array)
+            subplot = figure.add_subplot(grid[i])
+            subplot.set_xticks([])
+            subplot.set_yticks([])
+            subplot.set_title(f"{i}", size=font_size, pad=title_padding)
+            last_image = subplot.imshow(image, vmin=min_value, vmax=max_value)
+
+        colorbar_axis = figure.add_subplot(grid[count])
+        colorbar_axis.tick_params(labelsize=font_size)
+        Colorbar(mappable=last_image, ax=colorbar_axis)
+
+        plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
+        if show_figure:
+            plt.show()
+
+    @staticmethod
     def plot_network(network: Network,
                      output_file: str,
                      weight_vmin: Optional[float] = None,
@@ -46,9 +123,9 @@ class Visualizer:
                      bias_vmin: Optional[float] = None,
                      bias_vmax: Optional[float] = None,
                      font_size: int = 4,
-                     dpi: int = 300,
+                     dpi: int = 600,
                      title_padding: int = 0,
-                     show_figure: bool = True) -> None:
+                     show_figure: bool = False) -> None:
         """
         Plots the network using MATLAB plot and saves it to image file.
 
@@ -101,48 +178,26 @@ class Visualizer:
             plt.show()
 
     @staticmethod
-    def plot_arrays(arrays: List[np.ndarray],
-                    output_file: str,
-                    same_range: bool,
-                    font_size: int = 4,
-                    dpi: int = 300,
-                    title_padding: int = 0,
-                    show_figure: bool = True) -> None:
+    def plot_histogram(array: np.ndarray,
+                       output_file: str,
+                       bins: int = 256,
+                       data_range: Optional[Tuple[float, float]] = None,
+                       dpi: int = 100,
+                       show_figure: bool = False) -> None:
         """
-        Plots the the given numpy arrays in a row using MATLAB plot and saves it to image file.
+        Plots the value histogram of a numpy array using MATLAB plot and saves it to image file.
 
-        :param arrays: A list of numpy arrays.
+        :param array: A numpy array.
         :param output_file: The filename for the output image.
-        :param same_range: Flag whether to use the maximum range over all arrays for each individual plot.
-        :param font_size: Font size.
+        :param bins: Number of bins.
+        :param data_range: The data range.
         :param dpi: Figure DPI.
-        :param title_padding: Title padding.
         :param show_figure: Flag whether to also show the image figure.
         :return:
         """
 
-        count = len(arrays)
-        figure = plt.figure(figsize=(count, 1), constrained_layout=True, dpi=dpi)
-        grid = GridSpec(1, count + 1, figure, width_ratios=[3] * count + [1])
-
-        min_value = None
-        max_value = None
-        if same_range:
-            all_data = np.concatenate([array.flatten() for array in arrays])
-            min_value, max_value = np.min(all_data), np.max(all_data)
-
-        last_image = None
-        for i, array in enumerate(arrays):
-            image = Visualizer.array_to_image(array)
-            subplot = figure.add_subplot(grid[i])
-            subplot.set_xticks([])
-            subplot.set_yticks([])
-            subplot.set_title(f"{i}", size=font_size, pad=title_padding)
-            last_image = subplot.imshow(image, vmin=min_value, vmax=max_value)
-
-        colorbar_axis = figure.add_subplot(grid[count])
-        colorbar_axis.tick_params(labelsize=font_size)
-        Colorbar(mappable=last_image, ax=colorbar_axis)
+        _ = plt.figure(dpi=dpi)
+        plt.hist(array.flatten(), bins=bins, range=data_range)
 
         plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
         if show_figure:

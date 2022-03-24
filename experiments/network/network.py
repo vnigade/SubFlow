@@ -3,6 +3,7 @@ The Network and NetworkCollection classes for loading, saving, and representing 
 """
 import numpy as np
 import os
+import pickle
 
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
@@ -151,8 +152,31 @@ class NetworkCollection:
 
     networks: List[Network]
 
+    # =================================================================================================================================================================================================
+    # Public interface
+    # =================================================================================================================================================================================================
+
+    def save(self, filename: str) -> None:
+        file = open(filename, "wb")
+        pickle.dump(self, file)
+
+    @staticmethod
+    def load_from_file(filename: str) -> "NetworkCollection":
+        file = open(filename, "rb")
+        collection = pickle.load(file)
+        assert isinstance(collection, NetworkCollection)
+        return collection
+
     def __repr__(self):
         return "\n".join([str(network) for network in self.networks])
+
+    # =================================================================================================================================================================================================
+    # Properties
+    # =================================================================================================================================================================================================
+
+    @property
+    def count(self) -> int:
+        return len(self.networks)
 
     @property
     def combined_weights(self) -> np.ndarray:

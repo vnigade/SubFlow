@@ -5,6 +5,20 @@ import argparse
 import numpy as np
 
 from network import NetworkCollection, Visualizer
+from typing import List, Tuple
+
+
+# =================================================================================================
+# Helpers
+# =================================================================================================
+
+def array_columns_to_list(array: np.ndarray) -> List[np.ndarray]:
+    _, cols = array.shape
+    return [array[:, i].flatten() for i in range(cols)]
+
+
+def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> Tuple[float, float]:
+    return np.quantile(array, lower), np.quantile(array, upper)
 
 
 # =================================================================================================
@@ -28,22 +42,23 @@ def main():
         output_file = f"visualization_{network.utilization:.2f}.png"
         Visualizer.plot_network(network, output_file, min_weight_value, max_weight_value, min_bias_value, max_bias_value, show_figure=False)
 
-    # Compute and plot differences between weights
+    # Compute differences and data quantiles
     combined_weights = collection.combined_weights
-    weight_differences = np.diff(combined_weights, axis=1)
-    weight_differences_percentage = (np.abs(weight_differences) / np.abs(combined_weights[:, 0].reshape(-1, 1))) * 100.0
-    weight_differences_list = [weight_differences[:, i].flatten() for i in range(weight_differences.shape[1])]
-    weight_differences_percentage_list = [weight_differences_percentage[:, i].flatten() for i in range(weight_differences_percentage.shape[1])]
+    base_weights = combined_weights[:, 0].reshape(-1, 1)
+    weight_base_differences = combined_weights[:, 1:] - base_weights
+    weight_previous_differences = np.diff(combined_weights, axis=1)
+    weight_base_differences_ratio = np.abs(weight_base_differences) / np.abs(base_weights)
+    weight_previous_differences_ratio = np.abs(weight_previous_differences) / np.abs(base_weights)
 
-    cutaway_ratio = 0.05
-    combined_weights_quantiles = np.quantile(combined_weights, cutaway_ratio), np.quantile(combined_weights, 1.0 - cutaway_ratio)
-    weight_differences_quantiles = np.quantile(weight_differences, cutaway_ratio), np.quantile(weight_differences, 1.0 - cutaway_ratio)
-    weight_differences_percentage_quantiles = np.quantile(weight_differences_percentage, cutaway_ratio), np.quantile(weight_differences_percentage, 1.0 - cutaway_ratio)
+    # Plot weights data and histograms
+    Visualizer.plot_arrays(array_columns_to_list(weight_base_differences), "weight_base_differences.png", data_range=quantile(base_weights), show_figure=False)
+    Visualizer.plot_arrays(array_columns_to_list(weight_previous_differences), "weight_previous_differences.png", data_range=quantile(weight_previous_differences), show_figure=False)
+    Visualizer.plot_arrays(array_columns_to_list(weight_base_differences_ratio), "weight_base_differences_ratio.png", data_range=quantile(weight_base_differences_ratio), show_figure=False)
+    Visualizer.plot_arrays(array_columns_to_list(weight_previous_differences_ratio), "weight_previous_differences_ratio.png", data_range=quantile(weight_previous_differences_ratio), show_figure=False)
 
-    Visualizer.plot_arrays(weight_differences_list, "weight_differences.png", data_range=weight_differences_quantiles, show_figure=False)
-    Visualizer.plot_arrays(weight_differences_percentage_list, "weight_differences_percentage.png", data_range=weight_differences_percentage_quantiles, show_figure=False)
-    Visualizer.plot_histogram(combined_weights, "weight_histogram.png", data_range=combined_weights_quantiles)
-    Visualizer.plot_histogram(weight_differences, "difference_histogram.png", data_range=weight_differences_quantiles)
+    Visualizer.plot_histogram(combined_weights, "combined_weights_histogram.png", data_range=quantile(combined_weights))
+    Visualizer.plot_histogram(weight_base_differences, "weight_base_differences_histogram.png", data_range=quantile(weight_base_differences))
+    Visualizer.plot_histogram(weight_previous_differences, "weight_previous_differences_histogram.png", data_range=quantile(weight_previous_differences))
 
 
 if __name__ == "__main__":

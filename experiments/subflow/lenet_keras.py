@@ -20,12 +20,25 @@ class Model:
         self._loss_fn: tf.keras.losses.SparseCategoricalCrossentropy = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         self._metrics = ["accuracy"]
 
+        # self._model: tf.keras.models.Sequential = tf.keras.models.Sequential([
+        #     tf.keras.layers.Flatten(input_shape=(28, 28)),
+        #     tf.keras.layers.Dense(128, activation="relu"),
+        #     tf.keras.layers.Dropout(0.2),
+        #     tf.keras.layers.Dense(10)
+        # ])
+
         self._model: tf.keras.models.Sequential = tf.keras.models.Sequential([
-            tf.keras.layers.Flatten(input_shape=(28, 28)),
-            tf.keras.layers.Dense(128, activation="relu"),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(10)
+            tf.keras.layers.Input(shape=(28, 28, 1)),
+            tf.keras.layers.Conv2D(6, (5, 5), padding="valid", strides=(1, 1), activation="relu"),
+            tf.keras.layers.MaxPooling2D((2, 2)),
+            tf.keras.layers.Conv2D(16, (5, 5), padding="valid", strides=(1, 1), activation="relu"),
+            tf.keras.layers.MaxPooling2D((2, 2)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(400, activation="relu"),
+            tf.keras.layers.Dense(84, activation="relu"),
+            tf.keras.layers.Dense(10, activation="relu"),
         ])
+
         self._model.compile(optimizer=self._optimizer, loss=self._loss_fn, metrics=self._metrics)
         self._probability_model: tf.keras.Sequential = tf.keras.Sequential([self._model, tf.keras.layers.Softmax()])
 
@@ -121,8 +134,8 @@ def main():
     # Train and eval
     model = Model(args.checkpoint_path)
     print(model)
-    model.preload()
-    # train_model(model, train, 3)
+    # model.preload()
+    train_model(model, train, 3)
     eval_model(model, test)
 
     # Display some examples

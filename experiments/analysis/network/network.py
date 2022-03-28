@@ -6,7 +6,6 @@ import os
 import pickle
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 
 @dataclass
@@ -28,7 +27,7 @@ class Network:
 
     name: str
     utilization: float
-    layers: List[Layer]
+    layers: list[Layer]
 
     # =================================================================================================================================================================================================
     # Public interface
@@ -80,19 +79,19 @@ class Network:
         return len(self.stacked_biases)
 
     @property
-    def weight_names(self) -> List[str]:
+    def weight_names(self) -> list[str]:
         return [layer.weight_name for layer in self.layers]
 
     @property
-    def bias_names(self) -> List[str]:
+    def bias_names(self) -> list[str]:
         return [layer.bias_name for layer in self.layers]
 
     @property
-    def named_weights(self) -> Dict[str, np.ndarray]:
+    def named_weights(self) -> dict[str, np.ndarray]:
         return {layer.weight_name: layer.weight for layer in self.layers}
 
     @property
-    def named_bias(self) -> Dict[str, np.ndarray]:
+    def named_bias(self) -> dict[str, np.ndarray]:
         return {layer.bias_name: layer.bias for layer in self.layers}
 
     @property
@@ -104,19 +103,19 @@ class Network:
         return np.concatenate([layer.bias.flatten() for layer in self.layers])
 
     @property
-    def layer_weight_shapes(self) -> List[tuple]:
+    def layer_weight_shapes(self) -> list[tuple]:
         return [layer.weight.shape for layer in self.layers]
 
     @property
-    def layer_bias_shapes(self) -> List[tuple]:
+    def layer_bias_shapes(self) -> list[tuple]:
         return [layer.bias.shape for layer in self.layers]
 
     @property
-    def layer_weight_sizes(self) -> List[int]:
+    def layer_weight_sizes(self) -> list[int]:
         return [layer.weight.size for layer in self.layers]
 
     @property
-    def layer_bias_sizes(self) -> List[int]:
+    def layer_bias_sizes(self) -> list[int]:
         return [layer.bias.size for layer in self.layers]
 
     @property
@@ -136,11 +135,11 @@ class Network:
         return np.max(self.layer_bias_sizes)
 
     @property
-    def weight_minmax(self) -> Tuple[float, float]:
+    def weight_minmax(self) -> tuple[float, float]:
         return np.min(self.stacked_weights), np.max(self.stacked_weights)
 
     @property
-    def bias_minmax(self) -> Tuple[float, float]:
+    def bias_minmax(self) -> tuple[float, float]:
         return np.min(self.stacked_biases), np.max(self.stacked_biases)
 
 
@@ -150,7 +149,7 @@ class NetworkCollection:
     The NetworkCollection class holds a group of Networks.
     """
 
-    networks: List[Network]
+    networks: list[Network]
 
     # =================================================================================================================================================================================================
     # Public interface
@@ -203,7 +202,7 @@ class NetworkCollection:
         return np.stack([network.stacked_biases for network in self.networks], axis=1)
 
     @property
-    def weight_minmax(self) -> Tuple[float, float]:
+    def weight_minmax(self) -> tuple[float, float]:
         """
         Returns the min/max value over all the weights of all networks.
 
@@ -214,7 +213,7 @@ class NetworkCollection:
         return np.min(flattened_weights), np.max(flattened_weights)
 
     @property
-    def bias_minmax(self) -> Tuple[float, float]:
+    def bias_minmax(self) -> tuple[float, float]:
         """
         Returns the min/max value over all the biases of all networks.
 

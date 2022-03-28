@@ -8,7 +8,6 @@ import os
 import pickle
 
 from network import NetworkCollection
-from typing import List
 
 
 # =================================================================================================
@@ -40,7 +39,7 @@ def polyfit(collection: NetworkCollection, degree: int = 4) -> None:
     plt.show()
 
 
-def polyfit_all(collection: NetworkCollection, output_file: str, degree: int = 4) -> List[np.polynomial.polynomial.Polynomial]:
+def polyfit_all(collection: NetworkCollection, output_file: str, degree: int = 4) -> list[np.polynomial.polynomial.Polynomial]:
     # Combine all the network weights in one big array (#weights x #networks)
     combined_weights = collection.combined_weights
 
@@ -65,13 +64,13 @@ def polyfit_all(collection: NetworkCollection, output_file: str, degree: int = 4
     return polynomials
 
 
-def polyfit_load(input_file: str) -> List[np.polynomial.polynomial.Polynomial]:
+def polyfit_load(input_file: str) -> list[np.polynomial.polynomial.Polynomial]:
     file = open(input_file, "rb")
     polynomials = pickle.load(file)
     return polynomials
 
 
-def evaluate_fit(collection: NetworkCollection, polynomials: List[np.polynomial.polynomial.Polynomial]) -> None:
+def evaluate_fit(collection: NetworkCollection, polynomials: list[np.polynomial.polynomial.Polynomial]) -> None:
     combined_weights = collection.combined_weights
     fitted_weights = np.zeros(combined_weights.shape, dtype=np.float32)
     weight_count, _ = combined_weights.shape
@@ -115,7 +114,7 @@ def evaluate_fit(collection: NetworkCollection, polynomials: List[np.polynomial.
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="../output/collection.pickle", help="The network collection to load.")
+    args.add_argument("--collection_file", type=str, default="../../output/collection.pickle", help="The network collection to load.")
     args = args.parse_args()
 
     # Load network collection

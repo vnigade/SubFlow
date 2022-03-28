@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.colorbar import Colorbar
 from matplotlib.gridspec import GridSpec
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from .network import Network
 
@@ -64,9 +64,9 @@ class Visualizer:
             plt.show()
 
     @staticmethod
-    def plot_arrays(arrays: List[np.ndarray],
+    def plot_arrays(arrays: list[np.ndarray],
                     output_file: str,
-                    data_range: Optional[Tuple[float, float]] = None,
+                    data_range: Optional[tuple[float, float]] = None,
                     same_range: bool = False,
                     font_size: int = 4,
                     dpi: int = 600,
@@ -181,7 +181,7 @@ class Visualizer:
     def plot_histogram(array: np.ndarray,
                        output_file: str,
                        bins: int = 256,
-                       data_range: Optional[Tuple[float, float]] = None,
+                       data_range: Optional[tuple[float, float]] = None,
                        dpi: int = 100,
                        show_figure: bool = False) -> None:
         """

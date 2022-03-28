@@ -17,7 +17,7 @@ from network import Network, NetworkCollection
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--base_data_folder", type=str, default="../output/", help="The base data folder.")
+    args.add_argument("--base_data_folder", type=str, default="../../output/", help="The base data folder.")
     args.add_argument("--output_filename", type=str, default="collection.pickle", help="The output file name.")
     args = args.parse_args()
 

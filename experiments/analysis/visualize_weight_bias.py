@@ -5,19 +5,18 @@ import argparse
 import numpy as np
 
 from network import NetworkCollection, Visualizer
-from typing import List, Tuple
 
 
 # =================================================================================================
 # Helpers
 # =================================================================================================
 
-def array_columns_to_list(array: np.ndarray) -> List[np.ndarray]:
+def array_columns_to_list(array: np.ndarray) -> list[np.ndarray]:
     _, cols = array.shape
     return [array[:, i].flatten() for i in range(cols)]
 
 
-def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> Tuple[float, float]:
+def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> tuple[float, float]:
     return np.quantile(array, lower), np.quantile(array, upper)
 
 
@@ -28,7 +27,7 @@ def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> Tup
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="../output/collection.pickle", help="The network collection to load.")
+    args.add_argument("--collection_file", type=str, default="../../output/collection.pickle", help="The network collection to load.")
     args = args.parse_args()
 
     # Load network collection

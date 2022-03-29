@@ -69,6 +69,9 @@ class Network:
         return table + "\n" + separator + "\n" + "\n".join(summary)
 
     def summary(self) -> str:
+        return str(self)
+
+    def default_summary(self) -> str:
         lines = list()
         self._model.summary(print_fn=lambda x: lines.append(x))
         return "\n".join(lines)

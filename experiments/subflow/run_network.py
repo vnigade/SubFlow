@@ -65,8 +65,10 @@ def main():
     args = argparse.ArgumentParser()
     args.add_argument("--checkpoint_path", type=str, default="./checkpoints", help="The network checkpoint path.")
     args.add_argument("--network", type=str, default="subflow", choices=[n.value for n in Networks], help="The network to run.")
-    args.add_argument("--utilization", type=int, default=10, help="The network utilization in percentage (integer values 1 to 100) [SubFlow only].")
+    args.add_argument("--epochs", type=int, default=5, help="The number of training epochs.")
+    args.add_argument("--utilization", type=int, default=20, help="The network utilization in percentage (integer values 1 to 100) [SubFlow only].")
     args.add_argument("--seed", type=int, default=123456789, help="The random seed for activation mask sampling [SubFlow only].")
+    args.add_argument("--display_examples", type=bool, default=False, help="If True, displays some examples using MATPLOTLIB.")
     args = args.parse_args()
 
     # Load MNIST
@@ -87,11 +89,12 @@ def main():
     print()
 
     # network.preload()
-    train_network(network, train, 5)
+    train_network(network, train, args.epochs)
     eval_network(network, test)
 
     # Display some examples
-    display_examples(network, test)
+    if args.display_examples:
+        display_examples(network, test)
 
 
 if __name__ == "__main__":

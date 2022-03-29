@@ -50,6 +50,9 @@ class Network:
 
     def __str__(self) -> str:
         layers = [layer for layer in self._layers if type(layer).__name__ != "KerasTensor"]
+        dense_layers = [layer for layer in self._layers if isinstance(layer, tf.keras.layers.Dense)]
+        conv_layers = [layer for layer in self._layers if isinstance(layer, tf.keras.layers.Conv2D)]
+
         values = list()
         for layer in layers:
             values.append([layer.name,
@@ -72,12 +75,19 @@ class Network:
         total_neuron_count = np.sum([self._neuron_count(layer) for layer in layers])
         total_active_neuron_count = np.sum([self._active_neuron_count(layer) for layer in layers])
         neuron_percentage = 100.0 * float(total_active_neuron_count) / float(total_neuron_count)
+        dense_neuron_count = np.sum([self._neuron_count(layer) for layer in dense_layers])
+        conv_neuron_count = np.sum([self._neuron_count(layer) for layer in conv_layers])
+        dense_active_neuron_count = np.sum([self._active_neuron_count(layer) for layer in dense_layers])
+        conv_active_neuron_count = np.sum([self._active_neuron_count(layer) for layer in conv_layers])
+        dense_conv_neuron_count = dense_neuron_count + conv_neuron_count
+        dense_conv_active_neuron_count = dense_active_neuron_count + conv_active_neuron_count
+        dense_conv_neuron_percentage = 100.0 * float(dense_active_neuron_count + conv_active_neuron_count) / float(dense_neuron_count + conv_neuron_count)
         summary = [f"Model: {self._model.name}",
                    f"Total params: {self._model.count_params()}",
                    f"Trainable params: {trainable_count}",
                    f"Non-trainable params: {non_trainable_count}",
-                   f"Total neuron: {total_neuron_count}",
-                   f"Active neuron: {total_active_neuron_count} ({neuron_percentage:.1f} %)"]
+                   f"Total neurons: {total_neuron_count} ({total_active_neuron_count} active, {neuron_percentage:.1f}%)",
+                   f"Total neurons (Dense + Conv2D): {dense_conv_neuron_count} ({dense_conv_active_neuron_count} active, {dense_conv_neuron_percentage:.1f}%)"]
 
         separator = "=" * table.index("\n")
         return table + "\n" + separator + "\n" + "\n".join(summary)

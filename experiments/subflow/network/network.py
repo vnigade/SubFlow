@@ -39,7 +39,7 @@ class Network:
         self._layers = layers
         self._optimizer = "adam"
         self._loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
-        self._metrics = ["accuracy"]
+        self._metrics = ["accuracy", tf.keras.metrics.SparseCategoricalAccuracy()]
         self._model = tf.keras.models.Sequential(layers, name=name)
         self._checkpoint_directory = os.path.join(checkpoint_directory, name)
         self._checkpoint_path = os.path.join(self._checkpoint_directory, "{epoch:04d}.checkpoint")
@@ -53,21 +53,31 @@ class Network:
         values = list()
         for layer in layers:
             values.append([layer.name,
-                           type(layer).__name__,
+                           type(layer).__qualname__,
                            layer.input_shape,
                            layer.output_shape,
                            layer.count_params(),
                            self._weight_count(layer),
                            self._bias_count(layer),
-                           self._neuron_count(layer)])
+                           self._neuron_count(layer),
+                           self._active_neuron_count(layer),
+                           f"{self._active_neuron_percentage(layer):.1f}%"])
 
-        headers = ["Layer", "Type", "Input Shape", "Output Shape", "Param #", "Weight #", "Bias #", "Neuron #"]
+        headers = ["Layer", "Type", "Input Shape", "Output Shape", "Param #", "Weight #", "Bias #", "Neuron #", "Active Neuron #", "Neuron %"]
         table = tabulate.tabulate(values, headers=headers)
         assert len(table) > 0
 
         trainable_count = layer_utils.count_params(self._model.trainable_weights)
         non_trainable_count = layer_utils.count_params(self._model.non_trainable_weights)
-        summary = [f"Model: {self._model.name}", f"Total params: {self._model.count_params()}", f"Trainable params: {trainable_count}", f"Non-trainable params: {non_trainable_count}"]
+        total_neuron_count = np.sum([self._neuron_count(layer) for layer in layers])
+        total_active_neuron_count = np.sum([self._active_neuron_count(layer) for layer in layers])
+        neuron_percentage = 100.0 * float(total_active_neuron_count) / float(total_neuron_count)
+        summary = [f"Model: {self._model.name}",
+                   f"Total params: {self._model.count_params()}",
+                   f"Trainable params: {trainable_count}",
+                   f"Non-trainable params: {non_trainable_count}",
+                   f"Total neuron: {total_neuron_count}",
+                   f"Active neuron: {total_active_neuron_count} ({neuron_percentage:.1f} %)"]
 
         separator = "=" * table.index("\n")
         return table + "\n" + separator + "\n" + "\n".join(summary)
@@ -92,7 +102,7 @@ class Network:
         self._model.evaluate(x, y, verbose=2)
 
     def predict(self, x: np.ndarray, return_probabilities: bool = False) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
-        probabilities = self._model(x)
+        probabilities = self._model.predict(x)
         predictions = np.argmax(probabilities, axis=1)
         if return_probabilities:
             return predictions, probabilities
@@ -141,3 +151,17 @@ class Network:
     @staticmethod
     def _neuron_count(layer: tf.keras.layers.Layer) -> int:
         return int(np.prod([v for v in layer.output_shape if v]))
+
+    @staticmethod
+    def _active_neuron_count(layer: tf.keras.layers.Layer) -> int:
+        # todo: this is a terrible design, fix it!
+        method = getattr(layer, "active_neuron_count", None)
+        if callable(method):
+            count = layer.active_neuron_count()
+        else:
+            count = Network._neuron_count(layer)
+        return count
+
+    @staticmethod
+    def _active_neuron_percentage(layer: tf.keras.layers.Layer) -> float:
+        return 100.0 * float(Network._active_neuron_count(layer)) / float(Network._neuron_count(layer))

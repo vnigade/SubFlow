@@ -99,7 +99,7 @@ class SubFlow(Network):
         assert 1 < utilization <= 100
 
         # Create activation masks
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed)
         conv2d_activation_mask0 = self.get_conv2d_activation_mask(rng, 6, (24, 24), utilization)
         conv2d_activation_mask1 = self.get_conv2d_activation_mask(rng, 16, (8, 8), utilization)
         dense_activation_mask0 = self.get_dense_activation_mask(rng, 400, utilization)

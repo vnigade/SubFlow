@@ -24,7 +24,8 @@ class LeNet(Network):
                   tf.keras.layers.Flatten(),
                   tf.keras.layers.Dense(400, activation="relu"),
                   tf.keras.layers.Dense(84, activation="relu"),
-                  tf.keras.layers.Dense(10, activation="relu")]
+                  tf.keras.layers.Dense(10, activation="relu"),
+                  tf.keras.layers.Softmax()]
         super(LeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
 
 
@@ -34,10 +35,12 @@ class SimpleLeNet(Network):
     """
 
     def __init__(self, checkpoint_directory: str):
-        layers = [tf.keras.layers.Flatten(input_shape=(28, 28)),
+        layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
+                  tf.keras.layers.Flatten(),
                   tf.keras.layers.Dense(128, activation="relu"),
                   tf.keras.layers.Dropout(0.2),
-                  tf.keras.layers.Dense(10)]
+                  tf.keras.layers.Dense(10),
+                  tf.keras.layers.Softmax()]
         super(SimpleLeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
 
 

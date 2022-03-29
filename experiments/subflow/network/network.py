@@ -7,6 +7,7 @@ import tabulate
 import tensorflow as tf
 
 from tensorflow.python.keras.utils import layer_utils
+from typing import Union
 
 
 class Network:
@@ -30,19 +31,22 @@ class Network:
         self._checkpoint_path: str
         self._checkpoint_callback: tf.keras.callbacks.ModelCheckpoint
 
+        # Verify input
+        self._assertInput(layers)
+
         # Initialize members
         self._name = name
         self._layers = layers
         self._optimizer = "adam"
-        self._loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self._loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
         self._metrics = ["accuracy"]
         self._model = tf.keras.models.Sequential(layers, name=name)
         self._checkpoint_directory = os.path.join(checkpoint_directory, name)
         self._checkpoint_path = os.path.join(self._checkpoint_directory, "{epoch:04d}.checkpoint")
         self._checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self._checkpoint_path, save_weights_only=True, verbose=1)
 
+        # Compile the model
         self._model.compile(optimizer=self._optimizer, loss=self._loss_fn, metrics=self._metrics)
-        self._probability_model: tf.keras.Sequential = tf.keras.Sequential([self._model, tf.keras.layers.Softmax()])
 
     def __str__(self) -> str:
         layers = [layer for layer in self._layers if type(layer).__name__ != "KerasTensor"]
@@ -87,17 +91,13 @@ class Network:
     def evaluate(self, x, y) -> None:
         self._model.evaluate(x, y, verbose=2)
 
-    def infer(self, x: np.ndarray) -> np.ndarray:
-        return self._model(x)
-
-    def predict(self, x: np.ndarray) -> np.ndarray:
-        return np.argmax(self._model(x), axis=1)
-
-    def eval_loss(self, predictions: np.ndarray, ground_truth: np.ndarray) -> np.ndarray:
-        return self._loss_fn(ground_truth, predictions)
-
-    def probability(self, x: np.ndarray) -> np.ndarray:
-        return self._probability_model(x)
+    def predict(self, x: np.ndarray, return_probabilities: bool = False) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
+        probabilities = self._model(x)
+        predictions = np.argmax(probabilities, axis=1)
+        if return_probabilities:
+            return predictions, probabilities
+        else:
+            return predictions
 
     # =================================================================================================================================================================================================
     # Properties
@@ -110,6 +110,15 @@ class Network:
     # =================================================================================================================================================================================================
     # Private methods
     # =================================================================================================================================================================================================
+
+    @staticmethod
+    def _assertInput(layers: list[tf.keras.layers.Layer]) -> None:
+        if len(layers) < 2:
+            raise RuntimeError("Need at least two layers.")
+        if type(layers[0]).__name__ != "KerasTensor":
+            raise RuntimeError("The first layer needs to be of type keras.Input.")
+        if not isinstance(layers[-1], tf.keras.layers.Softmax):
+            raise RuntimeError("The last layer must be of type keras.Softmax.")
 
     @staticmethod
     def _weight_count(layer: tf.keras.layers.Layer) -> int:

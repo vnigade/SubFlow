@@ -72,7 +72,7 @@ def main():
     print()
 
     # network.preload()
-    train_network(network, train, 3)
+    train_network(network, train, 5)
     eval_network(network, test)
 
     # Display some examples

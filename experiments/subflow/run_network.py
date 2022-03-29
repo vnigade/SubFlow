@@ -69,6 +69,8 @@ def main():
     network = LeNet(args.checkpoint_path)
     # network = SimpleLeNet(args.checkpoint_path)
     print(network)
+    print()
+
     # network.preload()
     train_network(network, train, 3)
     eval_network(network, test)

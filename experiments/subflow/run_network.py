@@ -21,16 +21,6 @@ def load_data() -> tuple[tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.nda
     return (x_train, y_train), (x_test, y_test)
 
 
-def train_network(network: Network, train: tuple[np.ndarray, np.ndarray], epochs: int = 5):
-    x_train, y_train = train
-    network.train(x_train, y_train, epochs)
-
-
-def eval_network(network: Network, test: tuple[np.ndarray, np.ndarray]):
-    x_test, y_test = test
-    network.evaluate(x_test, y_test)
-
-
 def display_examples(network: Network, test: tuple[np.ndarray, np.ndarray], count: int = 20, examples_per_row: int = 5, seed: int = 123456789):
     x_test, y_test = test
     rng = np.random.default_rng(seed)
@@ -89,8 +79,8 @@ def main():
     print()
 
     # network.preload()
-    train_network(network, train, args.epochs)
-    eval_network(network, test)
+    network.train(x_train, y_train, args.epochs)
+    network.evaluate(x_test, y_test)
 
     # Display some examples
     if args.display_examples:

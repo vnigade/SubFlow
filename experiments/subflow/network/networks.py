@@ -17,16 +17,17 @@ class LeNet(Network):
     Implements the LeNet model architecture as it is used in SubFlow.
     """
 
-    def __init__(self, checkpoint_directory: str):
+    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False):
+        activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
-                  tf.keras.layers.Conv2D(6, (5, 5), padding="valid", activation="relu"),
+                  tf.keras.layers.Conv2D(6, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
-                  tf.keras.layers.Conv2D(16, (5, 5), padding="valid", activation="relu"),
+                  tf.keras.layers.Conv2D(16, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
                   tf.keras.layers.Flatten(),
-                  tf.keras.layers.Dense(400, activation="relu"),
-                  tf.keras.layers.Dense(84, activation="relu"),
-                  tf.keras.layers.Dense(10, activation="relu"),
+                  tf.keras.layers.Dense(400, activation=activation),
+                  tf.keras.layers.Dense(84, activation=activation),
+                  tf.keras.layers.Dense(10, activation=activation),  # todo: SubFlow does not use a activation function in this layer. How to best compare?
                   tf.keras.layers.Softmax()]
         super(LeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
 
@@ -36,10 +37,11 @@ class SimpleLeNet(Network):
     Implements a simpler LeNet architecture for testing.
     """
 
-    def __init__(self, checkpoint_directory: str):
+    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False):
+        activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
                   tf.keras.layers.Flatten(),
-                  tf.keras.layers.Dense(128, activation="relu"),
+                  tf.keras.layers.Dense(128, activation=activation),
                   tf.keras.layers.Dropout(0.2),
                   tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
@@ -95,7 +97,7 @@ class SubFlow(Network):
     # Public interface
     # =================================================================================================================================================================================================
 
-    def __init__(self, checkpoint_directory: str, utilization: int, seed: int):
+    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False, utilization: int = 100, seed: int = 123456789):
         assert 1 < utilization <= 100
 
         # Create activation masks
@@ -106,15 +108,16 @@ class SubFlow(Network):
         dense_activation_mask1 = self.get_dense_activation_mask(rng, 84, utilization)
 
         # Create layers
+        activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
-                  SubFlow.Conv2D(conv2d_activation_mask0, 6, (5, 5), padding="valid", activation="relu"),
+                  SubFlow.Conv2D(conv2d_activation_mask0, 6, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
-                  SubFlow.Conv2D(conv2d_activation_mask1, 16, (5, 5), padding="valid", activation="relu"),
+                  SubFlow.Conv2D(conv2d_activation_mask1, 16, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
                   tf.keras.layers.Flatten(),
-                  SubFlow.Dense(dense_activation_mask0, 400, activation="relu"),
-                  SubFlow.Dense(dense_activation_mask1, 84, activation="relu"),
-                  tf.keras.layers.Dense(10, activation="relu"),
+                  SubFlow.Dense(dense_activation_mask0, 400, activation=activation),
+                  SubFlow.Dense(dense_activation_mask1, 84, activation=activation),
+                  tf.keras.layers.Dense(10, activation=activation),  # todo: SubFlow does not use a activation function in this layer. How to best compare?
                   tf.keras.layers.Softmax()]
 
         name = f"{self.__class__.__name__}_{utilization}"

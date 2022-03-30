@@ -7,7 +7,7 @@ import tabulate
 import tensorflow as tf
 
 from tensorflow.python.keras.utils import layer_utils
-from typing import Union
+from typing import Optional, Union
 
 
 class Network:
@@ -57,6 +57,7 @@ class Network:
         for layer in layers:
             values.append([layer.name,
                            type(layer).__qualname__,
+                           self._get_activation(layer),
                            layer.input_shape,
                            layer.output_shape,
                            layer.count_params(),
@@ -66,7 +67,7 @@ class Network:
                            self._active_neuron_count(layer),
                            f"{self._active_neuron_percentage(layer):.1f}%"])
 
-        headers = ["Layer", "Type", "Input Shape", "Output Shape", "Param #", "Weight #", "Bias #", "Neuron #", "Active Neuron #", "Neuron %"]
+        headers = ["Layer", "Type", "Activation", "Input Shape", "Output Shape", "Param #", "Weight #", "Bias #", "Neuron #", "Active Neuron #", "Neuron %"]
         table = tabulate.tabulate(values, headers=headers)
         assert len(table) > 0
 
@@ -139,6 +140,10 @@ class Network:
             raise RuntimeError("The first layer needs to be of type keras.Input.")
         if not isinstance(layers[-1], tf.keras.layers.Softmax):
             raise RuntimeError("The last layer must be of type keras.Softmax.")
+
+    @staticmethod
+    def _get_activation(layer: tf.keras.layers.Layer) -> Optional[str]:
+        return layer.get_config().get("activation", None)
 
     @staticmethod
     def _weight_count(layer: tf.keras.layers.Layer) -> int:

@@ -27,7 +27,7 @@ class LeNet(Network):
                   tf.keras.layers.Flatten(),
                   tf.keras.layers.Dense(400, activation=activation),
                   tf.keras.layers.Dense(84, activation=activation),
-                  tf.keras.layers.Dense(10, activation=activation),  # todo: SubFlow does not use a activation function in this layer. How to best compare?
+                  tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
         super(LeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
 
@@ -117,7 +117,7 @@ class SubFlow(Network):
                   tf.keras.layers.Flatten(),
                   SubFlow.Dense(dense_activation_mask0, 400, activation=activation),
                   SubFlow.Dense(dense_activation_mask1, 84, activation=activation),
-                  tf.keras.layers.Dense(10, activation=activation),  # todo: SubFlow does not use a activation function in this layer. How to best compare?
+                  tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
 
         name = f"{self.__class__.__name__}_{utilization}"

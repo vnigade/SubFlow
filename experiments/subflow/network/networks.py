@@ -17,7 +17,7 @@ class LeNet(Network):
     Implements the LeNet model architecture as it is used in SubFlow.
     """
 
-    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False):
+    def __init__(self, initialization_directory: Optional[str] = None, leaky_relu: bool = True):
         activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
                   tf.keras.layers.Conv2D(6, (5, 5), padding="valid", activation=activation),
@@ -29,7 +29,7 @@ class LeNet(Network):
                   tf.keras.layers.Dense(84, activation=activation),
                   tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
-        super(LeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
+        super(LeNet, self).__init__(self.__class__.__name__, layers, initialization_directory)
 
 
 class SimpleLeNet(Network):
@@ -37,7 +37,7 @@ class SimpleLeNet(Network):
     Implements a simpler LeNet architecture for testing.
     """
 
-    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False):
+    def __init__(self, initialization_directory: Optional[str] = None, leaky_relu: bool = True):
         activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
                   tf.keras.layers.Flatten(),
@@ -45,7 +45,7 @@ class SimpleLeNet(Network):
                   tf.keras.layers.Dropout(0.2),
                   tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
-        super(SimpleLeNet, self).__init__(self.__class__.__name__, layers, checkpoint_directory)
+        super(SimpleLeNet, self).__init__(self.__class__.__name__, layers, initialization_directory)
 
 
 # =================================================================================================
@@ -97,7 +97,7 @@ class SubFlow(Network):
     # Public interface
     # =================================================================================================================================================================================================
 
-    def __init__(self, checkpoint_directory: str, leaky_relu: bool = False, utilization: int = 100, seed: int = 123456789):
+    def __init__(self, initialization_directory: Optional[str] = None, leaky_relu: bool = True, utilization: int = 100, seed: int = 123456789):
         assert 1 < utilization <= 100
 
         # Create activation masks
@@ -121,7 +121,7 @@ class SubFlow(Network):
                   tf.keras.layers.Softmax()]
 
         name = f"{self.__class__.__name__}_{utilization}"
-        super(SubFlow, self).__init__(name, layers, checkpoint_directory)
+        super(SubFlow, self).__init__(name, layers, initialization_directory)
 
     # =================================================================================================================================================================================================
     # Private methods

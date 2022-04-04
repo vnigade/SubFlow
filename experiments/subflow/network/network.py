@@ -3,6 +3,8 @@ Implements a base Network class.
 """
 import numpy as np
 import os
+import pathlib
+import shutil
 import tabulate
 import tensorflow as tf
 
@@ -19,39 +21,42 @@ class Network:
     # Public interface
     # =================================================================================================================================================================================================
 
-    def __init__(self, name: str, layers: list[tf.keras.layers.Layer], checkpoint_directory: str):
+    def __init__(self, name: str, layers: list[tf.keras.layers.Layer], initialization_directory: Optional[str] = None):
         # Define members and their types
         self._name: str
-        self._layers: list[tf.keras.layers.Layer]
         self._model: tf.keras.models.Sequential
         self._optimizer: str
         self._loss_fn: tf.keras.losses.Loss
         self._metrics: list[str]
-        self._checkpoint_dir: str
-        self._checkpoint_path: str
-        self._checkpoint_callback: tf.keras.callbacks.ModelCheckpoint
 
         # Verify input
         self._assertInput(layers)
 
         # Initialize members
         self._name = name
-        self._layers = layers
+        self._model = tf.keras.models.Sequential(layers, name=name)
         self._optimizer = "adam"
         self._loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
         self._metrics = ["accuracy", tf.keras.metrics.SparseCategoricalAccuracy()]
-        self._model = tf.keras.models.Sequential(layers, name=name)
-        self._checkpoint_directory = os.path.join(checkpoint_directory, name)
-        self._checkpoint_path = os.path.join(self._checkpoint_directory, "{epoch:04d}.checkpoint")
-        self._checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self._checkpoint_path, save_weights_only=True, verbose=1)
 
         # Compile the model
         self._model.compile(optimizer=self._optimizer, loss=self._loss_fn, metrics=self._metrics)
 
+        # Initialize the model from previous weights
+        if initialization_directory:
+            self._initialize(initialization_directory)
+
     def __str__(self) -> str:
-        layers = [layer for layer in self._layers if type(layer).__name__ != "KerasTensor"]
-        dense_layers = [layer for layer in self._layers if isinstance(layer, tf.keras.layers.Dense)]
-        conv_layers = [layer for layer in self._layers if isinstance(layer, tf.keras.layers.Conv2D)]
+        """
+        Returns a customized model summary as string.
+
+        :return: The customized model summary.
+        """
+
+        assert self._model
+        layers = [layer for layer in self._model.layers if type(layer).__name__ != "KerasTensor"]
+        dense_layers = [layer for layer in self._model.layers if isinstance(layer, tf.keras.layers.Dense)]
+        conv_layers = [layer for layer in self._model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
 
         values = list()
         for layer in layers:
@@ -94,25 +99,86 @@ class Network:
         return table + "\n" + separator + "\n" + "\n".join(summary)
 
     def summary(self) -> str:
+        """
+        Returns a customized model summary.
+
+        :return: The customized model summary.
+        """
+
         return str(self)
 
+    def load(self, model_directory: str) -> None:
+        """
+        Loads a saved model.
+
+        Note that calling load overwrites the model that is defined in the constructor.
+
+        :param model_directory: The directory that contains a saved model.
+        :return: None.
+        """
+
+        del self._model
+        model_path = os.path.join(model_directory, f"{self._name}.model")
+        self._model = tf.keras.models.load_model(model_path)
+
     def default_summary(self) -> str:
+        """
+        Returns a string with the default tf.keras summary.
+
+        :return: The model summary.
+        """
+
         lines = list()
         self._model.summary(print_fn=lambda x: lines.append(x))
         return "\n".join(lines)
 
-    def preload(self) -> None:
-        latest = tf.train.latest_checkpoint(self._checkpoint_directory)
-        if latest:
-            self._model.load_weights(latest)
+    def train(self, output_directory: str, x: np.ndarray, y: np.ndarray, epochs: int, clear_folder: bool = False) -> None:
+        """
+        Trains the model.
 
-    def train(self, x: np.ndarray, y: np.ndarray, epochs: int) -> None:
-        self._model.fit(x, y, epochs=epochs, callbacks=[self._checkpoint_callback])
+        :param output_directory: The output directory for the training checkpoints and final model.
+        :param x: The input training data (features).
+        :param y: The output training data (labels).
+        :param epochs: Number of epochs to train.
+        :param clear_folder: If True, clears the contents of the output folder before training.
+        :return: None.
+        """
+
+        # Ensure output folder exists and (if requested) clear its previous content
+        if clear_folder and os.path.exists(output_directory):
+            shutil.rmtree(output_directory)
+        pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
+
+        # Setup training callback functions
+        callbacks = [
+            tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1)
+        ]
+
+        # Train and save the model afterwards
+        self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
+        model_path = os.path.join(output_directory, f"{self._name}.model")
+        self._model.save(model_path)
 
     def evaluate(self, x, y) -> None:
+        """
+        Evalutes t he model.
+
+        :param x: The input test data (features).
+        :param y: The output test data (labels).
+        :return: None.
+        """
+
         self._model.evaluate(x, y, verbose=2)
 
     def predict(self, x: np.ndarray, return_probabilities: bool = False) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
+        """
+        Predicts class labels for examples.
+
+        :param x: The examples, inputs to the models.
+        :param return_probabilities: If True, returns also the probability distributions of the classes.
+        :return: Either an np.ndarray with class predictions or a tuple with predictions and probabilities.
+        """
+
         probabilities = self._model.predict(x)
         predictions = np.argmax(probabilities, axis=1)
         if return_probabilities:
@@ -126,7 +192,7 @@ class Network:
 
     @property
     def name(self) -> str:
-        raise self._name
+        return self._name
 
     # =================================================================================================================================================================================================
     # Private methods
@@ -140,6 +206,12 @@ class Network:
             raise RuntimeError("The first layer needs to be of type keras.Input.")
         if not isinstance(layers[-1], tf.keras.layers.Softmax):
             raise RuntimeError("The last layer must be of type keras.Softmax.")
+
+    def _initialize(self, initialize_directory: str) -> None:
+        latest = tf.train.latest_checkpoint(initialize_directory)
+        if not latest:
+            raise RuntimeError("A initialization directory was provided, but no checkpoints were found.")
+        self._model.load_weights(latest)
 
     @staticmethod
     def _get_activation(layer: tf.keras.layers.Layer) -> Optional[str]:

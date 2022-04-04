@@ -1,6 +1,7 @@
 """
 Implements a base Network class.
 """
+import logging
 import numpy as np
 import os
 import tabulate
@@ -214,6 +215,7 @@ class Network:
         if not latest:
             raise RuntimeError("A initialization directory was provided, but no checkpoints were found.")
         self._model.load_weights(latest)
+        logging.info(f"Initialized the model {self._name} from weights: {latest}")
 
     @staticmethod
     def _get_activation(layer: tf.keras.layers.Layer) -> Optional[str]:

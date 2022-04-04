@@ -3,8 +3,6 @@ Implements a base Network class.
 """
 import numpy as np
 import os
-import pathlib
-import shutil
 import tabulate
 import tensorflow as tf
 
@@ -132,7 +130,7 @@ class Network:
         self._model.summary(print_fn=lambda x: lines.append(x))
         return "\n".join(lines)
 
-    def train(self, output_directory: str, x: np.ndarray, y: np.ndarray, epochs: int, clear_folder: bool = False) -> None:
+    def train(self, output_directory: str, x: np.ndarray, y: np.ndarray, epochs: int) -> tf.keras.callbacks.History:
         """
         Trains the model.
 
@@ -140,24 +138,28 @@ class Network:
         :param x: The input training data (features).
         :param y: The output training data (labels).
         :param epochs: Number of epochs to train.
-        :param clear_folder: If True, clears the contents of the output folder before training.
-        :return: None.
+        :return: Returns a history instance which is a record of training loss and metrics values at successive epochs.
         """
-
-        # Ensure output folder exists and (if requested) clear its previous content
-        if clear_folder and os.path.exists(output_directory):
-            shutil.rmtree(output_directory)
-        pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
         # Setup training callback functions
         callbacks = [
-            tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1)
+            tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1),
+            tf.keras.callbacks.CSVLogger(os.path.join(output_directory, "training.csv"), append=True, separator=";")
         ]
 
-        # Train and save the model afterwards
-        self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
+        # Train the model and save the loss and metrics history
+        history = self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
+
+        # Save the whole model
         model_path = os.path.join(output_directory, f"{self._name}.model")
         self._model.save(model_path)
+
+        # Write out loss and metrics history
+        for key, value in history.history.items():
+            array = np.array(value)
+            np.savetxt(os.path.join(output_directory, f"history_{key}.txt"), array, delimiter=",")
+
+        return history
 
     def evaluate(self, x, y) -> None:
         """

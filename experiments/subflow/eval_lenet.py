@@ -23,7 +23,7 @@ def main():
     print(f"Test data: {x_test.shape} {y_test.shape}")
     print()
 
-    # Create the network
+    # Create and load the network
     if args.use_simple:
         network = SimpleLeNet(initialization_directory=None, leaky_relu=args.leaky_relu)
     else:

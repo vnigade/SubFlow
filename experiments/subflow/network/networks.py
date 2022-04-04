@@ -73,7 +73,7 @@ class SubFlow(Network):
             self.seed: int = seed
             self.utilization: int = utilization
             self.activation_mask: tf.Tensor = tf.constant(float_mask)
-            self.active_neurons = np.count_nonzero(activation_mask)
+            self.active_neurons: int = np.count_nonzero(activation_mask)
 
         def call(self, inputs):
             output = super(SubFlow.Dense, self).call(inputs)
@@ -106,33 +106,51 @@ class SubFlow(Network):
 
     @tf.keras.utils.register_keras_serializable(package="SubFlow")
     class Conv2D(tf.keras.layers.Conv2D):
-        def __init__(self, seed: int, utilization: int, temp_output_shape: tuple[int, int], filters: int, kernel_size: tuple[int, int], **kwargs):
+        def __init__(self, seed: int, utilization: int, filters: int, kernel_size: tuple[int, int], **kwargs):
             super(SubFlow.Conv2D, self).__init__(filters, kernel_size, **kwargs)
-
-            activation_mask = self._create_activation_mask(seed, utilization, temp_output_shape, filters)
-            assert activation_mask.ndim == 3
-            float_mask = activation_mask.astype(np.float32)
 
             self.seed: int = seed
             self.utilization: int = utilization
-            self.temp_output_shape: tuple[int, int] = temp_output_shape
+            self.activation_mask: Optional[tf.Tensor] = None
+            self.active_neurons: Optional[int] = None
+
+        def build(self, input_shape):
+            super(SubFlow.Conv2D, self).build(input_shape)
+
+            # Compute output shape
+            _, height, width, _ = input_shape
+            resolution = np.array([height, width], dtype=np.int32)
+            strides = np.array(self.strides, dtype=np.float32)
+            kernel_size = np.array(self.kernel_size, dtype=np.float32)
+            if self.padding == "valid":
+                output_shape = np.ceil((resolution - kernel_size + 1).astype(np.float32) / strides).astype(np.int32)
+            else:
+                output_shape = np.ceil(resolution.astype(np.float32) / strides).astype(np.int32)
+
+            # Create activation mask
+            activation_mask = self._create_activation_mask(self.seed, self.utilization, output_shape, self.filters)
+            assert activation_mask.ndim == 3
+            float_mask = activation_mask.astype(np.float32)
+
+            self.activation_mask = tf.constant(float_mask)
             self.active_neurons = np.count_nonzero(activation_mask)
-            self.activation_mask: tf.Tensor = tf.constant(float_mask)
 
         def call(self, inputs):
+            assert self.activation_mask is not None
             output = super(SubFlow.Conv2D, self).call(inputs)
             result = tf.multiply(output, self.activation_mask)
             return result
 
         def get_config(self):
             config = super(SubFlow.Conv2D, self).get_config()
-            config.update({"seed": self.seed, "utilization": self.utilization, "temp_output_shape": self.temp_output_shape})
+            config.update({"seed": self.seed, "utilization": self.utilization})
             return config
 
         def active_neuron_count(self) -> int:
             return self.active_neurons
 
-        def _create_activation_mask(self, seed: int, utilization: int, output_shape: tuple[int, int], filter_count: int) -> np.ndarray:
+        @staticmethod
+        def _create_activation_mask(seed: int, utilization: int, output_shape: tuple[int, int], filter_count: int) -> np.ndarray:
             # note: this implementation tries to maintain the same ratio of utilization per feature map
             rng = np.random.default_rng(seed)
             per_feature_map_count = np.prod(output_shape)
@@ -165,9 +183,9 @@ class SubFlow(Network):
         activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
                   # todo: remove the need to pass the output shape to the layer (it can be derived in the build method).
-                  SubFlow.Conv2D(seeds[0], utilization, (24, 24), 6, (5, 5), padding="valid", activation=activation),
+                  SubFlow.Conv2D(seeds[0], utilization, 6, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
-                  SubFlow.Conv2D(seeds[1], utilization, (8, 8), 16, (5, 5), padding="valid", activation=activation),
+                  SubFlow.Conv2D(seeds[1], utilization, 16, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
                   tf.keras.layers.Flatten(),
                   SubFlow.Dense(seeds[2], utilization, 400, activation=activation),

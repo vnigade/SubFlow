@@ -25,11 +25,10 @@ def main():
     print()
 
     # Create and load the network
-    test_dir = os.path.join(args.model_base_directory, "SubFlow_20")
-    network = SubFlow(test_dir, args.leaky_relu, args.utilization, args.seed)
+    network = SubFlow(None, args.leaky_relu, args.utilization, args.seed)
     model_directory = os.path.join(args.model_base_directory, network.name + ("" if args.leaky_relu else "_relu"))
     print(f"Loading model: {model_directory}")
-    # network.load(model_directory)
+    network.load(model_directory)
     print(network)
     print()
 

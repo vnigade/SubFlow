@@ -58,31 +58,65 @@ class SubFlow(Network):
     """
 
     # =================================================================================================================================================================================================
-    # Specialized layers
+    # Specialized Dense layer
     # =================================================================================================================================================================================================
 
+    @tf.keras.utils.register_keras_serializable(package="SubFlow")
     class Dense(tf.keras.layers.Dense):
-        def __init__(self, activation_mask: np.ndarray, units, activation=None):
-            super(SubFlow.Dense, self).__init__(units, activation)
+        def __init__(self, seed: int, utilization: int, units: int, **kwargs):
+            super(SubFlow.Dense, self).__init__(units, **kwargs)
+
+            activation_mask = self._create_activation_mask(seed, utilization, units)
             assert activation_mask.ndim == 1 and activation_mask.size == units
-            self.active_neurons = np.count_nonzero(activation_mask)
             float_mask = activation_mask.astype(np.float32)
+
+            self.seed: int = seed
+            self.utilization: int = utilization
             self.activation_mask: tf.Tensor = tf.constant(float_mask)
+            self.active_neurons = np.count_nonzero(activation_mask)
 
         def call(self, inputs):
             output = super(SubFlow.Dense, self).call(inputs)
             result = tf.multiply(output, self.activation_mask)
             return result
 
+        def get_config(self):
+            config = super(SubFlow.Dense, self).get_config()
+            config.update({"seed": self.seed, "utilization": self.utilization, "units": self.units})
+            return config
+
         def active_neuron_count(self) -> int:
             return self.active_neurons
 
+        @staticmethod
+        def _create_activation_mask(seed: int, utilization: int, units: int) -> np.ndarray:
+            rng = np.random.default_rng(seed)
+            to_keep = int(float(units) * float(utilization) / 100.0)
+            assert 0 <= to_keep <= units
+            indices = np.arange(units)
+            rng.shuffle(indices)
+            indices = indices[:to_keep]
+            mask = np.zeros(units, dtype=np.int8)
+            mask[indices] = 1
+            return mask
+
+    # =================================================================================================================================================================================================
+    # Specialized Conv2D layer
+    # =================================================================================================================================================================================================
+
+    @tf.keras.utils.register_keras_serializable(package="SubFlow")
     class Conv2D(tf.keras.layers.Conv2D):
-        def __init__(self, activation_mask: np.ndarray, filters: int, kernel_size: tuple[int, int], padding=None, activation=None):
-            super(SubFlow.Conv2D, self).__init__(filters, kernel_size, padding=padding, activation=activation)
+        def __init__(self, seed: int, utilization: int, temp_output_shape: tuple[int, int], filters: int, kernel_size: tuple[int, int], **kwargs):
+            super(SubFlow.Conv2D, self).__init__(filters, kernel_size, **kwargs)
+
+            activation_mask = self._create_activation_mask(seed, utilization, temp_output_shape, filters)
             assert activation_mask.ndim == 3
-            self.active_neurons = np.count_nonzero(activation_mask)
             float_mask = activation_mask.astype(np.float32)
+
+            self.seed: int = seed
+            self.utilization: int = utilization
+            self.temp_output_shape: tuple[int, int] = temp_output_shape
+            self.active_neurons = np.count_nonzero(activation_mask)
             self.activation_mask: tf.Tensor = tf.constant(float_mask)
 
         def call(self, inputs):
@@ -90,8 +124,31 @@ class SubFlow(Network):
             result = tf.multiply(output, self.activation_mask)
             return result
 
+        def get_config(self):
+            config = super(SubFlow.Conv2D, self).get_config()
+            config.update({"seed": self.seed, "utilization": self.utilization, "temp_output_shape": self.temp_output_shape})
+            return config
+
         def active_neuron_count(self) -> int:
             return self.active_neurons
+
+        def _create_activation_mask(self, seed: int, utilization: int, output_shape: tuple[int, int], filter_count: int) -> np.ndarray:
+            # note: this implementation tries to maintain the same ratio of utilization per feature map
+            rng = np.random.default_rng(seed)
+            per_feature_map_count = np.prod(output_shape)
+            mask = np.zeros((*output_shape, filter_count), dtype=np.int8)
+
+            for i in range(filter_count):
+                to_keep = int(float(per_feature_map_count) * float(utilization) / 100.0)
+                assert 0 <= to_keep <= per_feature_map_count
+                indices = np.arange(per_feature_map_count)
+                rng.shuffle(indices)
+                indices = indices[:to_keep]
+                feature_map_mask = np.zeros(per_feature_map_count, dtype=np.int8)
+                feature_map_mask[indices] = 1
+                mask[:, :, i] = feature_map_mask.reshape(output_shape)
+
+            return mask
 
     # =================================================================================================================================================================================================
     # Public interface
@@ -102,54 +159,21 @@ class SubFlow(Network):
 
         # Create activation masks
         rng = np.random.default_rng(seed)
-        conv2d_activation_mask0 = self.get_conv2d_activation_mask(rng, 6, (24, 24), utilization)
-        conv2d_activation_mask1 = self.get_conv2d_activation_mask(rng, 16, (8, 8), utilization)
-        dense_activation_mask0 = self.get_dense_activation_mask(rng, 400, utilization)
-        dense_activation_mask1 = self.get_dense_activation_mask(rng, 84, utilization)
+        seeds = rng.integers(low=0, high=np.iinfo(np.int32).max, size=4)
 
         # Create layers
         activation = "leaky_relu" if leaky_relu else "relu"
         layers = [tf.keras.layers.Input(shape=(28, 28, 1)),
-                  SubFlow.Conv2D(conv2d_activation_mask0, 6, (5, 5), padding="valid", activation=activation),
+                  # todo: remove the need to pass the output shape to the layer (it can be derived in the build method).
+                  SubFlow.Conv2D(seeds[0], utilization, (24, 24), 6, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
-                  SubFlow.Conv2D(conv2d_activation_mask1, 16, (5, 5), padding="valid", activation=activation),
+                  SubFlow.Conv2D(seeds[1], utilization, (8, 8), 16, (5, 5), padding="valid", activation=activation),
                   tf.keras.layers.MaxPooling2D((2, 2)),
                   tf.keras.layers.Flatten(),
-                  SubFlow.Dense(dense_activation_mask0, 400, activation=activation),
-                  SubFlow.Dense(dense_activation_mask1, 84, activation=activation),
+                  SubFlow.Dense(seeds[2], utilization, 400, activation=activation),
+                  SubFlow.Dense(seeds[3], utilization, 84, activation=activation),
                   tf.keras.layers.Dense(10),
                   tf.keras.layers.Softmax()]
 
         name = f"{self.__class__.__name__}_{utilization}"
         super(SubFlow, self).__init__(name, layers, initialization_directory)
-
-    # =================================================================================================================================================================================================
-    # Private methods
-    # =================================================================================================================================================================================================
-
-    def get_dense_activation_mask(self, rng: np.random.Generator, count: int, utilization: int) -> np.ndarray:
-        to_keep = int(float(count) * float(utilization) / 100.0)
-        assert 0 <= to_keep <= count
-        indices = np.arange(count)
-        rng.shuffle(indices)
-        indices = indices[:to_keep]
-        mask = np.zeros(count, dtype=np.int8)
-        mask[indices] = 1
-        return mask
-
-    def get_conv2d_activation_mask(self, rng: np.random.Generator, filter_count: int, input_shape: tuple[int, int], utilization: int) -> np.ndarray:
-        # note: this implementation tries to maintain the same ratio of utilization per feature map
-        per_feature_map_count = np.prod(input_shape)
-        mask = np.zeros((*input_shape, filter_count), dtype=np.int8)
-
-        for i in range(filter_count):
-            to_keep = int(float(per_feature_map_count) * float(utilization) / 100.0)
-            assert 0 <= to_keep <= per_feature_map_count
-            indices = np.arange(per_feature_map_count)
-            rng.shuffle(indices)
-            indices = indices[:to_keep]
-            feature_map_mask = np.zeros(per_feature_map_count, dtype=np.int8)
-            feature_map_mask[indices] = 1
-            mask[:, :, i] = feature_map_mask.reshape(input_shape)
-
-        return mask

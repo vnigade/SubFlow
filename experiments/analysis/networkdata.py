@@ -1,5 +1,5 @@
 """
-The Network and NetworkCollection classes for loading, saving, and representing neural networks and their weights and biases.
+The NetworkData and NetworkCollection classes for loading, saving, and representing neural networks and their weights and biases.
 """
 import numpy as np
 import os
@@ -9,9 +9,9 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Network:
+class NetworkData:
     """
-    The Network class holds the data for a single neural network.
+    The NetworkData class holds the data for a single neural network.
     """
 
     @dataclass
@@ -34,7 +34,7 @@ class Network:
     # =================================================================================================================================================================================================
 
     @staticmethod
-    def load_from_folder(base_data_folder: str, network_name: str, utilization: float) -> "Network":
+    def load_from_folder(base_data_folder: str, network_name: str, utilization: float) -> "NetworkData":
         # Get the weight and bias filenames
         data_folder = os.path.join(base_data_folder, network_name)
         files = os.listdir(data_folder)
@@ -49,7 +49,7 @@ class Network:
             weight_name = os.path.splitext(weight_file)[0]
             bias = np.load(os.path.join(data_folder, bias_file))
             bias_name = os.path.splitext(bias_file)[0]
-            layer = Network.Layer(weight, weight_name, bias, bias_name)
+            layer = NetworkData.Layer(weight, weight_name, bias, bias_name)
             layers.append(layer)
 
         # Sanity check
@@ -57,7 +57,7 @@ class Network:
             assert layer.weight.dtype == np.float32
             assert layer.bias.dtype == np.float32
 
-        return Network(network_name, utilization, layers)
+        return NetworkData(network_name, utilization, layers)
 
     def __repr__(self):
         return f"Network '{self.name}' [{self.utilization:.2f} utilization][{self.count} layers]"
@@ -149,7 +149,7 @@ class NetworkCollection:
     The NetworkCollection class holds a group of Networks.
     """
 
-    networks: list[Network]
+    networks: list[NetworkData]
 
     # =================================================================================================================================================================================================
     # Public interface

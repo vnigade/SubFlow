@@ -7,7 +7,7 @@ todo: currently this is hard-coded for MNIST dataset and 10 utilizations.
 import argparse
 import os
 
-from network import Network, NetworkCollection
+from analysis import NetworkData, NetworkCollection
 
 
 # =================================================================================================
@@ -17,7 +17,8 @@ from network import Network, NetworkCollection
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--base_data_folder", type=str, default="../../output/", help="The base data folder.")
+    args.add_argument("--base_data_folder", type=str, default="../output/", help="The base data folder.")
+    args.add_argument("--output_folder", type=str, default="./data", help="The output folder.")
     args.add_argument("--output_filename", type=str, default="collection.pickle", help="The output file name.")
     args = args.parse_args()
 
@@ -35,12 +36,12 @@ def main():
               0.1: "sub_network1"}
 
     # Load networks
-    networks = [Network.load_from_folder(args.base_data_folder, name, utilization) for utilization, name in inputs.items()]
+    networks = [NetworkData.load_from_folder(args.base_data_folder, name, utilization) for utilization, name in inputs.items()]
     collection = NetworkCollection(networks)
     print(collection)
 
     # Save collection
-    output_filename = os.path.join(args.base_data_folder, args.output_filename)
+    output_filename = os.path.join(args.output_folder, args.output_filename)
     collection.save(output_filename)
 
 

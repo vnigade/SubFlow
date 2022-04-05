@@ -8,7 +8,7 @@ from matplotlib.colorbar import Colorbar
 from matplotlib.gridspec import GridSpec
 from typing import Optional
 
-from .network import Network
+from .networkdata import NetworkData
 
 
 class Visualizer:
@@ -17,7 +17,7 @@ class Visualizer:
     """
 
     @staticmethod
-    def network_to_image(network: Network) -> np.ndarray:
+    def network_to_image(network: NetworkData) -> np.ndarray:
         raise NotImplementedError()
 
     @staticmethod
@@ -116,7 +116,7 @@ class Visualizer:
             plt.show()
 
     @staticmethod
-    def plot_network(network: Network,
+    def plot_network(network: NetworkData,
                      output_file: str,
                      weight_vmin: Optional[float] = None,
                      weight_vmax: Optional[float] = None,
@@ -129,7 +129,7 @@ class Visualizer:
         """
         Plots the network using MATLAB plot and saves it to image file.
 
-        :param network: The network.
+        :param network: The NetworkData instance.
         :param output_file: The filename for the output image.
         :param weight_vmin: Weight minimum value or None.
         :param weight_vmax: Weight maximum value or None.

@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pickle
 
-from network import NetworkCollection
+from analysis import NetworkCollection
 
 
 # =================================================================================================
@@ -114,7 +114,8 @@ def evaluate_fit(collection: NetworkCollection, polynomials: list[np.polynomial.
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="../../output/collection.pickle", help="The network collection to load.")
+    args.add_argument("--collection_file", type=str, default="./data/collection.pickle", help="The network collection to load.")
+    args.add_argument("--temp_folder", type=str, default="./data", help="The folder for saving the temporary polynomial file.")
     args = args.parse_args()
 
     # Load network collection
@@ -123,7 +124,7 @@ def main():
 
     # Fit polynomials to weight functions
     degree = 3
-    temp_file = f"polynomials_{degree}.pickle"
+    temp_file = os.path.join(args.temp_folder, f"polynomials_{degree}.pickle")
 
     if not os.path.exists(temp_file):
         # polyfit(collection)

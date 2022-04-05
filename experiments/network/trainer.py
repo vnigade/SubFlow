@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import os
 import pathlib
+import pickle
 import shutil
 import sys
 
@@ -21,6 +22,15 @@ from .networks import LeNet, SimpleLeNet, SubFlow
 @dataclass
 class BaseConfiguration:
     model_base_directory: str
+
+    def save(self, filename: str) -> None:
+        file = open(filename, "wb")
+        pickle.dump(self, file)
+
+    @staticmethod
+    def load_from_file(filename: str) -> "BaseConfiguration":
+        file = open(filename, "rb")
+        return pickle.load(file)
 
 
 @dataclass
@@ -118,6 +128,10 @@ class Trainer:
         if clear_contents and os.path.exists(model_directory):
             shutil.rmtree(model_directory)
         pathlib.Path(model_directory).mkdir(parents=True, exist_ok=True)
+
+        # Save config to model folder
+        config_file = os.path.join(model_directory, "train.configuration")
+        configuration.save(config_file)
 
         # Setup logging to file in the model directory
         log_file = os.path.join(model_directory, "logging.log")

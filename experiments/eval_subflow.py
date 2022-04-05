@@ -24,11 +24,12 @@ def main():
     print()
 
     # Create configurations to evaluate
-    # subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromScratch/")
-    subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromLeNet/")
+    subflow_from_scratch_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromScratch/")
+    subflow_from_lenet_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromLeNet/")
     configurations = list()
     for utilization in range(10, 100, 10):
-        configurations.append(SubFlowLeNetConfiguration(subflow_base_folder, args.epochs, leaky_relu=True, utilization=utilization, seed=args.seed))
+        configurations.append(SubFlowLeNetConfiguration(subflow_from_scratch_base_folder, args.epochs, leaky_relu=True, utilization=utilization, seed=args.seed))
+        configurations.append(SubFlowLeNetConfiguration(subflow_from_lenet_base_folder, args.epochs, leaky_relu=True, utilization=utilization, seed=args.seed))
 
     # Evaluate configurations
     for configuration in configurations:
@@ -39,7 +40,7 @@ def main():
 
         # Evaluate the network
         metrics = network.evaluate(x_test, y_test)
-        print(f"{network.name} (epochs={configuration.epochs}, leaky_relu={configuration.leaky_relu}, utilization={configuration.utilization}): {metrics}")
+        print(f"{network.name} (folder={configuration.model_base_directory}, epochs={configuration.epochs}, leaky_relu={configuration.leaky_relu}, utilization={configuration.utilization}): {metrics}")
 
         # Display some examples
         if args.display_examples:

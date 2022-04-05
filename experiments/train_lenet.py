@@ -12,7 +12,7 @@ def main():
     # Parse arguments
     args = argparse.ArgumentParser()
     args.add_argument("--model_base_directory", type=str, default="./models", help="The network model base directory.")
-    args.add_argument("--epochs", type=int, default=10, help="The number of training epochs.")
+    args.add_argument("--epochs", type=int, default=5, help="The number of training epochs.")
     args.add_argument("--clear_contents", type=bool, default=True, action=argparse.BooleanOptionalAction, help="Clears the previous contents of the output directory if set.")
     args = args.parse_args()
 

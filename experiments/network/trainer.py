@@ -51,6 +51,7 @@ class SubFlowLeNetConfiguration(BaseConfiguration):
     leaky_relu: bool = True
     utilization: int = 100
     seed: int = 123456789
+    initialization_directory: Optional[str] = None
     run: Optional[int] = None
 
     @property
@@ -137,7 +138,7 @@ class Trainer:
         elif isinstance(configuration, SimpleLeNetConfiguration):
             network = SimpleLeNet(initialization_directory=None, leaky_relu=configuration.leaky_relu)
         elif isinstance(configuration, SubFlowLeNetConfiguration):
-            network = SubFlow(None, configuration.leaky_relu, configuration.utilization, configuration.seed)
+            network = SubFlow(configuration.initialization_directory, configuration.leaky_relu, configuration.utilization, configuration.seed)
         else:
             raise RuntimeError("Trainer tried to train an unknown network configuration.")
         logger.info(f"\n{network}\n")

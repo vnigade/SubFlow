@@ -24,7 +24,8 @@ def main():
     print()
 
     # Create configurations to evaluate
-    subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromScratch/")
+    # subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromScratch/")
+    subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromLeNet/")
     configurations = list()
     for utilization in range(10, 100, 10):
         configurations.append(SubFlowLeNetConfiguration(subflow_base_folder, args.epochs, leaky_relu=True, utilization=utilization, seed=args.seed))

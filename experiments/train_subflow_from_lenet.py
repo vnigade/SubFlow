@@ -1,10 +1,10 @@
 """
-Trains the SubFlow models from scratch.
+Trains the SubFlow models initialized using the baseline LeNet model.
 """
 import argparse
 import os
 
-from network import SubFlowLeNetConfiguration, Trainer
+from network import LeNetConfiguration, SubFlowLeNetConfiguration, Trainer
 from network.mnist import load_data
 
 
@@ -22,11 +22,16 @@ def main():
     train, _ = load_data()
     x_train, y_train = train
 
-    # Create training configurations for training SubFlow from scratch
-    subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromScratch/")
+    # Get model path of the base LeNet model for initialization
+    lenet_base_folder = os.path.join(args.model_base_directory, "LeNet")
+    lenet_configuration = LeNetConfiguration(lenet_base_folder, args.epochs, args.leaky_relu)
+    lenet_model_directory = os.path.join(lenet_configuration.model_base_directory, lenet_configuration.path)
+
+    # Create training configurations for training SubFlow from the LeNet baseline
+    subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow/FromLeNet/")
     trainer = Trainer()
     for utilization in range(10, 100, 10):
-        configuration = SubFlowLeNetConfiguration(subflow_base_folder, args.epochs, leaky_relu=args.leaky_relu, utilization=utilization, seed=args.seed)
+        configuration = SubFlowLeNetConfiguration(subflow_base_folder, args.epochs, leaky_relu=args.leaky_relu, utilization=utilization, seed=args.seed, initialization_directory=lenet_model_directory)
         trainer.add_configuration(configuration)
 
     # Train all the configurations

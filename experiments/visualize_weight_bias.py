@@ -28,7 +28,7 @@ def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> tup
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="./data/collection.pickle", help="The network collection to load.")
+    args.add_argument("--collection_file", type=str, default="./data/from_lenet_collection.pickle", help="The network collection to load.")
     args.add_argument("--plot_folder", type=str, default="./data", help="The folder for outputting the plots.")
     args = args.parse_args()
 

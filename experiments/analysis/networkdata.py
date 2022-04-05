@@ -34,7 +34,7 @@ class NetworkData:
     # =================================================================================================================================================================================================
 
     @staticmethod
-    def load_from_folder(base_data_folder: str, network_name: str, utilization: float) -> "NetworkData":
+    def load_from_original_subflow(base_data_folder: str, network_name: str, utilization: float) -> "NetworkData":
         # Get the weight and bias filenames
         data_folder = os.path.join(base_data_folder, network_name)
         files = os.listdir(data_folder)

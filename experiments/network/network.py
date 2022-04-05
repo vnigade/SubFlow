@@ -162,16 +162,18 @@ class Network:
 
         return history
 
-    def evaluate(self, x, y) -> None:
+    def evaluate(self, x, y, verbose: int = 0) -> dict[str, float]:
         """
-        Evalutes t he model.
+        Evalutes the model and returns the metrics.
 
         :param x: The input test data (features).
         :param y: The output test data (labels).
-        :return: None.
+        :param verbose: The verbose flag to enable direct printing of the evaluation.
+        :return: A dictionary of (str, float) with (metric name, evaluated metric value).
         """
 
-        self._model.evaluate(x, y, verbose=2)
+        metrics = self._model.evaluate(x, y, verbose=verbose)
+        return dict(zip(self._model.metrics_names, metrics))
 
     def predict(self, x: np.ndarray, return_probabilities: bool = False) -> Union[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """

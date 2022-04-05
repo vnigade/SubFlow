@@ -43,8 +43,8 @@ def main():
         network.load(model_directory)
 
         # Evaluate the network
-        print(f"Evaluation for {configuration}: ")
-        network.evaluate(x_test, y_test)
+        metrics = network.evaluate(x_test, y_test)
+        print(f"{network.name} (epochs={configuration.epochs}, leaky_relu={configuration.leaky_relu}): {metrics}")
 
         # Display some examples
         if args.display_examples:

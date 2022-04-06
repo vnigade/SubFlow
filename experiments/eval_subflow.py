@@ -29,7 +29,7 @@ def main():
     print()
 
     # Specify which training strategies to evaluate
-    training_strategies = ["FromScratch", "FromLeNet"]
+    training_strategies = ["FromScratch", "FromLeNet", "Progressive"]
 
     # Find all configurations for the training strategies
     subflow_base_folder = os.path.join(args.model_base_directory, "SubFlow")

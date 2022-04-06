@@ -60,7 +60,7 @@ def main():
             metrics = network.evaluate(x_test, y_test)
 
             # Print metrics
-            print(f"utilization={configuration.utilization}, leaky_relu={configuration.leaky_relu}, initalization_directory={configuration.initialization_directory}: {metrics}")
+            print(f"utilization={configuration.utilization}, leaky_relu={configuration.leaky_relu}, initialization_directory={configuration.initialization_directory}: {metrics}")
 
             # Display some examples
             if args.display_examples:

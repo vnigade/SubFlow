@@ -28,7 +28,7 @@ def main():
     print(f"Test data: {x_test.shape} {y_test.shape}")
     print()
 
-    # Specifiy which training strategies to evaluate
+    # Specify which training strategies to evaluate
     training_strategies = ["FromScratch", "FromLeNet"]
 
     # Find all configurations for the training strategies

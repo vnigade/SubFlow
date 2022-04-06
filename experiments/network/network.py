@@ -41,6 +41,18 @@ class Network:
         # Compile the model
         self._model.compile(optimizer=self._optimizer, loss=self._loss_fn, metrics=self._metrics)
 
+        # Because Keras is a broken framework, it changes the weights if the model is initialized and directly saved without fit/eval in-between.
+        # This issue seems to be related to the TensorFlow variable initializer, see https://github.com/keras-team/keras/issues/4875.
+        #   from tensorflow.python.keras.backend import manual_variable_initialization
+        #   manual_variable_initialization(True)
+        # Turning on manual variable initialization for Keras does not seem to solve this issue in TensorFlow 2.x anymore.
+        # The simple workaround here is to simply run an eval on a random batch.
+        #
+        # todo: find a a better fix?
+        dummy_x = np.zeros((1, 28, 28), dtype=np.float32)
+        dummy_y = np.zeros((1,), dtype=np.float32)
+        self._model.evaluate(dummy_x, dummy_y, verbose=0)
+
         # Initialize the model from previous weights
         if initialization_directory:
             self._initialize(initialization_directory)
@@ -148,17 +160,20 @@ class Network:
             tf.keras.callbacks.CSVLogger(os.path.join(output_directory, "training.csv"), append=True, separator=";")
         ]
 
-        # Train the model and save the loss and metrics history
-        history = self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
+        if epochs > 0:
+            # Train the model
+            history = self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
+
+            # Store the loss and metrics history
+            for key, value in history.history.items():
+                array = np.array(value)
+                np.savetxt(os.path.join(output_directory, f"history_{key}.txt"), array, delimiter=",")
+        else:
+            history = tf.keras.callbacks.History()
 
         # Save the whole model
         model_path = os.path.join(output_directory, f"{self._name}.model")
         self._model.save(model_path)
-
-        # Write out loss and metrics history
-        for key, value in history.history.items():
-            array = np.array(value)
-            np.savetxt(os.path.join(output_directory, f"history_{key}.txt"), array, delimiter=",")
 
         return history
 

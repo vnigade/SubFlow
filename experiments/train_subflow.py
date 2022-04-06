@@ -14,7 +14,7 @@ from network.mnist import load_data
 
 def create_from_scratch_configurations(base_folder: str, epochs: int, leaky_relu: bool, seed: int) -> list[SubFlowLeNetConfiguration]:
     configurations = list()
-    for utilization in range(10, 100, 10):
+    for utilization in range(10, 100 + 1, 10):
         configuration = SubFlowLeNetConfiguration(base_folder, epochs, leaky_relu=leaky_relu, utilization=utilization, seed=seed)
         configurations.append(configuration)
     return configurations
@@ -27,9 +27,24 @@ def create_from_lenet_configurations(base_folder: str, epochs: int, leaky_relu: 
 
     # Create training configurations for training SubFlow from the LeNet baseline
     configurations = list()
-    for utilization in range(10, 100, 10):
+    for utilization in range(10, 100 + 1, 10):
         configuration = SubFlowLeNetConfiguration(base_folder, epochs, leaky_relu=leaky_relu, utilization=utilization, seed=seed, initialization_directory=lenet_model_directory)
         configurations.append(configuration)
+    return configurations
+
+
+def create_progressive_configurations(base_folder: str, epochs: int, leaky_relu: bool, seed: int, lenet_base_folder: str) -> list[SubFlowLeNetConfiguration]:
+    # Get model path of the base LeNet model for initialization
+    lenet_configuration = LeNetConfiguration(lenet_base_folder, epochs, leaky_relu)
+    lenet_model_directory = os.path.join(lenet_configuration.model_base_directory, lenet_configuration.path)
+
+    # Create training configurations for training SubFlow from the LeNet baseline
+    previous_model = lenet_model_directory
+    configurations = list()
+    for utilization in reversed(range(10, 100 + 1, 10)):
+        configuration = SubFlowLeNetConfiguration(base_folder, epochs, leaky_relu=leaky_relu, utilization=utilization, seed=seed, initialization_directory=previous_model)
+        configurations.append(configuration)
+        previous_model = os.path.join(base_folder, configuration.path)
     return configurations
 
 
@@ -57,6 +72,7 @@ def main():
     configurations = create_from_lenet_configurations(os.path.join(subflow_base_folder, "FromLeNet"), 0, args.leaky_relu, args.seed, lenet_base_folder, args.epochs)
     configurations += create_from_lenet_configurations(os.path.join(subflow_base_folder, "FromLeNet"), args.epochs, args.leaky_relu, args.seed, lenet_base_folder, args.epochs)
     configurations += create_from_scratch_configurations(os.path.join(subflow_base_folder, "FromScratch"), args.epochs, args.leaky_relu, args.seed)
+    configurations += create_progressive_configurations(os.path.join(subflow_base_folder, "Progressive"), args.epochs, args.leaky_relu, args.seed, lenet_base_folder)
 
     # Create a trainer and train all the configurations
     trainer = Trainer()

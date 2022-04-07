@@ -1,0 +1,212 @@
+Arguments: {'collection_file': './data/progressive_leaky_5epochs.collection', 'output_directory': './results', 'relative_to_base': True, 'individual_compression': True}
+Test data: (10000, 28, 28) (10000,)
+
+Network 'SubFlow_100' [1.00 utilization][5 layers]
+Network 'SubFlow_90' [0.90 utilization][5 layers]
+Network 'SubFlow_80' [0.80 utilization][5 layers]
+Network 'SubFlow_70' [0.70 utilization][5 layers]
+Network 'SubFlow_60' [0.60 utilization][5 layers]
+Network 'SubFlow_50' [0.50 utilization][5 layers]
+Network 'SubFlow_40' [0.40 utilization][5 layers]
+Network 'SubFlow_30' [0.30 utilization][5 layers]
+Network 'SubFlow_20' [0.20 utilization][5 layers]
+Network 'SubFlow_10' [0.10 utilization][5 layers]
+Number of parameters: 1399060
+Number of non-zero parameters: 1399060 (100.0%)
+Average weight magnitude: 0.15
+Average bias magnitude: 0.12
+Full byte size: 5.3 MB
+Non-zero byte size: 5.3 MB (100.0%)
+
+Original differences:
+Number of non-zero weight differences: 1254509 (100.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 5036612 (100.0%)
+
+======================================================================================================================================================
+Original weights
+------------------------------------------------------------------------------------------------------------------------------------------------------
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.043844595551490784, 'accuracy': 0.9883000254631042, 'sparse_categorical_accuracy': 0.9883000254631042}
+utilization=80: {'loss': 0.048861030489206314, 'accuracy': 0.9896000027656555, 'sparse_categorical_accuracy': 0.9896000027656555}
+utilization=70: {'loss': 0.05546140298247337, 'accuracy': 0.9860000014305115, 'sparse_categorical_accuracy': 0.9860000014305115}
+utilization=60: {'loss': 0.04813102260231972, 'accuracy': 0.9908999800682068, 'sparse_categorical_accuracy': 0.9908999800682068}
+utilization=50: {'loss': 0.05052938312292099, 'accuracy': 0.9890000224113464, 'sparse_categorical_accuracy': 0.9890000224113464}
+utilization=40: {'loss': 0.054517608135938644, 'accuracy': 0.9872999787330627, 'sparse_categorical_accuracy': 0.9872999787330627}
+utilization=30: {'loss': 0.0672711730003357, 'accuracy': 0.9853000044822693, 'sparse_categorical_accuracy': 0.9853000044822693}
+utilization=20: {'loss': 0.05644375458359718, 'accuracy': 0.984000027179718, 'sparse_categorical_accuracy': 0.984000027179718}
+utilization=10: {'loss': 0.07809320092201233, 'accuracy': 0.9779000282287598, 'sparse_categorical_accuracy': 0.9779000282287598}
+======================================================================================================================================================
+
+======================================================================================================================================================
+Compressed weights (rate = 10)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 1129059 (90.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 4534812 (90.0%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.043837882578372955, 'accuracy': 0.9883000254631042, 'sparse_categorical_accuracy': 0.9883000254631042}
+utilization=80: {'loss': 0.04885435476899147, 'accuracy': 0.9896000027656555, 'sparse_categorical_accuracy': 0.9896000027656555}
+utilization=70: {'loss': 0.055460285395383835, 'accuracy': 0.9860000014305115, 'sparse_categorical_accuracy': 0.9860000014305115}
+utilization=60: {'loss': 0.04812870919704437, 'accuracy': 0.9908999800682068, 'sparse_categorical_accuracy': 0.9908999800682068}
+utilization=50: {'loss': 0.05053449049592018, 'accuracy': 0.9890000224113464, 'sparse_categorical_accuracy': 0.9890000224113464}
+utilization=40: {'loss': 0.05452457442879677, 'accuracy': 0.9872000217437744, 'sparse_categorical_accuracy': 0.9872000217437744}
+utilization=30: {'loss': 0.06729190051555634, 'accuracy': 0.9853000044822693, 'sparse_categorical_accuracy': 0.9853000044822693}
+utilization=20: {'loss': 0.05644484981894493, 'accuracy': 0.984000027179718, 'sparse_categorical_accuracy': 0.984000027179718}
+utilization=10: {'loss': 0.07808764278888702, 'accuracy': 0.9779000282287598, 'sparse_categorical_accuracy': 0.9779000282287598}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 20)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 1003608 (80.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 4033008 (80.1%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.04363788291811943, 'accuracy': 0.9883999824523926, 'sparse_categorical_accuracy': 0.9883999824523926}
+utilization=80: {'loss': 0.04922867938876152, 'accuracy': 0.9894999861717224, 'sparse_categorical_accuracy': 0.9894999861717224}
+utilization=70: {'loss': 0.05527225881814957, 'accuracy': 0.9861999750137329, 'sparse_categorical_accuracy': 0.9861999750137329}
+utilization=60: {'loss': 0.04793432727456093, 'accuracy': 0.991100013256073, 'sparse_categorical_accuracy': 0.991100013256073}
+utilization=50: {'loss': 0.04992866516113281, 'accuracy': 0.9894000291824341, 'sparse_categorical_accuracy': 0.9894000291824341}
+utilization=40: {'loss': 0.054519545286893845, 'accuracy': 0.9871000051498413, 'sparse_categorical_accuracy': 0.9871000051498413}
+utilization=30: {'loss': 0.06727105379104614, 'accuracy': 0.9853000044822693, 'sparse_categorical_accuracy': 0.9853000044822693}
+utilization=20: {'loss': 0.056597527116537094, 'accuracy': 0.9836999773979187, 'sparse_categorical_accuracy': 0.9836999773979187}
+utilization=10: {'loss': 0.0781349167227745, 'accuracy': 0.9776999950408936, 'sparse_categorical_accuracy': 0.9776999950408936}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 30)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 878157 (70.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 3531204 (70.1%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.04356953874230385, 'accuracy': 0.9884999990463257, 'sparse_categorical_accuracy': 0.9884999990463257}
+utilization=80: {'loss': 0.04845086857676506, 'accuracy': 0.989300012588501, 'sparse_categorical_accuracy': 0.989300012588501}
+utilization=70: {'loss': 0.05485858768224716, 'accuracy': 0.9868999719619751, 'sparse_categorical_accuracy': 0.9868999719619751}
+utilization=60: {'loss': 0.04756421223282814, 'accuracy': 0.9909999966621399, 'sparse_categorical_accuracy': 0.9909999966621399}
+utilization=50: {'loss': 0.051033683121204376, 'accuracy': 0.9879999756813049, 'sparse_categorical_accuracy': 0.9879999756813049}
+utilization=40: {'loss': 0.054632335901260376, 'accuracy': 0.9872999787330627, 'sparse_categorical_accuracy': 0.9872999787330627}
+utilization=30: {'loss': 0.06831307709217072, 'accuracy': 0.9846000075340271, 'sparse_categorical_accuracy': 0.9846000075340271}
+utilization=20: {'loss': 0.056088343262672424, 'accuracy': 0.9847000241279602, 'sparse_categorical_accuracy': 0.9847000241279602}
+utilization=10: {'loss': 0.07998313009738922, 'accuracy': 0.9771000146865845, 'sparse_categorical_accuracy': 0.9771000146865845}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 40)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 752706 (60.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 3029400 (60.1%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.04112132638692856, 'accuracy': 0.9886999726295471, 'sparse_categorical_accuracy': 0.9886999726295471}
+utilization=80: {'loss': 0.047504112124443054, 'accuracy': 0.9894000291824341, 'sparse_categorical_accuracy': 0.9894000291824341}
+utilization=70: {'loss': 0.05209670588374138, 'accuracy': 0.9865000247955322, 'sparse_categorical_accuracy': 0.9865000247955322}
+utilization=60: {'loss': 0.046881407499313354, 'accuracy': 0.9904000163078308, 'sparse_categorical_accuracy': 0.9904000163078308}
+utilization=50: {'loss': 0.049837056547403336, 'accuracy': 0.9886999726295471, 'sparse_categorical_accuracy': 0.9886999726295471}
+utilization=40: {'loss': 0.05452876538038254, 'accuracy': 0.9866999983787537, 'sparse_categorical_accuracy': 0.9866999983787537}
+utilization=30: {'loss': 0.06701476871967316, 'accuracy': 0.9846000075340271, 'sparse_categorical_accuracy': 0.9846000075340271}
+utilization=20: {'loss': 0.05583154782652855, 'accuracy': 0.9847999811172485, 'sparse_categorical_accuracy': 0.9847999811172485}
+utilization=10: {'loss': 0.08159254491329193, 'accuracy': 0.9765999913215637, 'sparse_categorical_accuracy': 0.9765999913215637}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 50)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 627256 (50.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 2527600 (50.2%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.03885256499052048, 'accuracy': 0.9890999794006348, 'sparse_categorical_accuracy': 0.9890999794006348}
+utilization=80: {'loss': 0.04723131284117699, 'accuracy': 0.9886999726295471, 'sparse_categorical_accuracy': 0.9886999726295471}
+utilization=70: {'loss': 0.05531524494290352, 'accuracy': 0.9850999712944031, 'sparse_categorical_accuracy': 0.9850999712944031}
+utilization=60: {'loss': 0.043848536908626556, 'accuracy': 0.9894000291824341, 'sparse_categorical_accuracy': 0.9894000291824341}
+utilization=50: {'loss': 0.050696879625320435, 'accuracy': 0.9876000285148621, 'sparse_categorical_accuracy': 0.9876000285148621}
+utilization=40: {'loss': 0.05470992997288704, 'accuracy': 0.9850999712944031, 'sparse_categorical_accuracy': 0.9850999712944031}
+utilization=30: {'loss': 0.0644882544875145, 'accuracy': 0.9847999811172485, 'sparse_categorical_accuracy': 0.9847999811172485}
+utilization=20: {'loss': 0.0579134039580822, 'accuracy': 0.984000027179718, 'sparse_categorical_accuracy': 0.984000027179718}
+utilization=10: {'loss': 0.0822010487318039, 'accuracy': 0.9761000275611877, 'sparse_categorical_accuracy': 0.9761000275611877}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 60)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 501804 (40.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 2025792 (40.2%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.03434210643172264, 'accuracy': 0.9901999831199646, 'sparse_categorical_accuracy': 0.9901999831199646}
+utilization=80: {'loss': 0.04255418851971626, 'accuracy': 0.9894000291824341, 'sparse_categorical_accuracy': 0.9894000291824341}
+utilization=70: {'loss': 0.049268901348114014, 'accuracy': 0.9860000014305115, 'sparse_categorical_accuracy': 0.9860000014305115}
+utilization=60: {'loss': 0.04399522766470909, 'accuracy': 0.9894999861717224, 'sparse_categorical_accuracy': 0.9894999861717224}
+utilization=50: {'loss': 0.05825992301106453, 'accuracy': 0.9851999878883362, 'sparse_categorical_accuracy': 0.9851999878883362}
+utilization=40: {'loss': 0.059382542967796326, 'accuracy': 0.9832000136375427, 'sparse_categorical_accuracy': 0.9832000136375427}
+utilization=30: {'loss': 0.06862260401248932, 'accuracy': 0.9829999804496765, 'sparse_categorical_accuracy': 0.9829999804496765}
+utilization=20: {'loss': 0.060812242329120636, 'accuracy': 0.9830999970436096, 'sparse_categorical_accuracy': 0.9830999970436096}
+utilization=10: {'loss': 0.08965734392404556, 'accuracy': 0.9746000170707703, 'sparse_categorical_accuracy': 0.9746000170707703}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 70)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 376353 (30.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 1523988 (30.3%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.03247483819723129, 'accuracy': 0.9904999732971191, 'sparse_categorical_accuracy': 0.9904999732971191}
+utilization=80: {'loss': 0.04232566058635712, 'accuracy': 0.9878000020980835, 'sparse_categorical_accuracy': 0.9878000020980835}
+utilization=70: {'loss': 0.050123538821935654, 'accuracy': 0.984499990940094, 'sparse_categorical_accuracy': 0.984499990940094}
+utilization=60: {'loss': 0.045582957565784454, 'accuracy': 0.9865000247955322, 'sparse_categorical_accuracy': 0.9865000247955322}
+utilization=50: {'loss': 0.06515759974718094, 'accuracy': 0.9789999723434448, 'sparse_categorical_accuracy': 0.9789999723434448}
+utilization=40: {'loss': 0.060215696692466736, 'accuracy': 0.9811999797821045, 'sparse_categorical_accuracy': 0.9811999797821045}
+utilization=30: {'loss': 0.06748778373003006, 'accuracy': 0.9787999987602234, 'sparse_categorical_accuracy': 0.9787999987602234}
+utilization=20: {'loss': 0.07423961907625198, 'accuracy': 0.9778000116348267, 'sparse_categorical_accuracy': 0.9778000116348267}
+utilization=10: {'loss': 0.11093183606863022, 'accuracy': 0.9678999781608582, 'sparse_categorical_accuracy': 0.9678999781608582}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 80)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 250902 (20.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 1022184 (20.3%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.03039363957941532, 'accuracy': 0.9911999702453613, 'sparse_categorical_accuracy': 0.9911999702453613}
+utilization=80: {'loss': 0.04279868304729462, 'accuracy': 0.9868999719619751, 'sparse_categorical_accuracy': 0.9868999719619751}
+utilization=70: {'loss': 0.05229746550321579, 'accuracy': 0.9832000136375427, 'sparse_categorical_accuracy': 0.9832000136375427}
+utilization=60: {'loss': 0.06411119550466537, 'accuracy': 0.9814000129699707, 'sparse_categorical_accuracy': 0.9814000129699707}
+utilization=50: {'loss': 0.14138364791870117, 'accuracy': 0.9508000016212463, 'sparse_categorical_accuracy': 0.9508000016212463}
+utilization=40: {'loss': 0.10285701602697372, 'accuracy': 0.9692000150680542, 'sparse_categorical_accuracy': 0.9692000150680542}
+utilization=30: {'loss': 0.1060112789273262, 'accuracy': 0.9702000021934509, 'sparse_categorical_accuracy': 0.9702000021934509}
+utilization=20: {'loss': 0.13014614582061768, 'accuracy': 0.9617000222206116, 'sparse_categorical_accuracy': 0.9617000222206116}
+utilization=10: {'loss': 0.17907920479774475, 'accuracy': 0.9469000101089478, 'sparse_categorical_accuracy': 0.9469000101089478}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+======================================================================================================================================================
+Compressed weights (rate = 90)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Number of non-zero weight differences: 125452 (10.0%)
+Number of non-zero bias differences: 4644 (100.0%)
+Differences byte size: 4.8 MB
+Non-zero differences byte size: 520384 (10.3%)
+utilization=100: {'loss': 0.033584535121917725, 'accuracy': 0.9918000102043152, 'sparse_categorical_accuracy': 0.9918000102043152}
+utilization=90: {'loss': 0.029388995841145515, 'accuracy': 0.9907000064849854, 'sparse_categorical_accuracy': 0.9907000064849854}
+utilization=80: {'loss': 0.04512785002589226, 'accuracy': 0.9854999780654907, 'sparse_categorical_accuracy': 0.9854999780654907}
+utilization=70: {'loss': 0.08075422048568726, 'accuracy': 0.9790999889373779, 'sparse_categorical_accuracy': 0.9790999889373779}
+utilization=60: {'loss': 0.14152900874614716, 'accuracy': 0.9714000225067139, 'sparse_categorical_accuracy': 0.9714000225067139}
+utilization=50: {'loss': 0.33039164543151855, 'accuracy': 0.9204000234603882, 'sparse_categorical_accuracy': 0.9204000234603882}
+utilization=40: {'loss': 0.4420178234577179, 'accuracy': 0.9160000085830688, 'sparse_categorical_accuracy': 0.9160000085830688}
+utilization=30: {'loss': 0.5728578567504883, 'accuracy': 0.8748999834060669, 'sparse_categorical_accuracy': 0.8748999834060669}
+utilization=20: {'loss': 0.6635643839836121, 'accuracy': 0.7896999716758728, 'sparse_categorical_accuracy': 0.7896999716758728}
+utilization=10: {'loss': 0.6807118058204651, 'accuracy': 0.751800000667572, 'sparse_categorical_accuracy': 0.751800000667572}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+

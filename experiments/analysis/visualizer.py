@@ -62,6 +62,7 @@ class Visualizer:
         plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
         if show_figure:
             plt.show()
+        plt.close(figure)
 
     @staticmethod
     def plot_arrays(arrays: list[np.ndarray],
@@ -114,6 +115,58 @@ class Visualizer:
         plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
         if show_figure:
             plt.show()
+        plt.close(figure)
+
+    @staticmethod
+    def plot_array_columns(array: np.ndarray,
+                           output_file: str,
+                           data_range: Optional[tuple[float, float]] = None,
+                           same_range: bool = False,
+                           font_size: int = 4,
+                           dpi: int = 600,
+                           title_padding: int = 0,
+                           show_figure: bool = False) -> None:
+        """
+        Plots the given numpy array where each column is treated as a separate array and saves it to image file.
+
+        :param array: A numpy array.
+        :param output_file: The filename for the output image.
+        :param data_range: Minimum and maximum value for the data.
+        :param same_range: Flag whether to compute the data range automatically if data_range is not provided.
+        :param font_size: Font size.
+        :param dpi: Figure DPI.
+        :param title_padding: Title padding.
+        :param show_figure: Flag whether to also show the image figure.
+        :return:
+        """
+        _, cols = array.shape
+        arrays = [array[:, i].flatten() for i in range(cols)]
+        Visualizer.plot_arrays(arrays, output_file, data_range, same_range, font_size, dpi, title_padding, show_figure)
+
+    @staticmethod
+    def plot_quantiled_array_columns(array: np.ndarray,
+                                     output_file: str,
+                                     lower_quantile: float = 0.02,
+                                     upper_quantile: float = 0.98,
+                                     font_size: int = 4,
+                                     dpi: int = 600,
+                                     title_padding: int = 0,
+                                     show_figure: bool = False) -> None:
+        """
+        Plots the given numpy array where each column is treated as a separate array and saves it to image file.
+
+        :param array: A numpy array.
+        :param output_file: The filename for the output image.
+        :param lower_quantile: The lower quantile in percentage [0, 1] (e.g., 0.02 means the lowest 2% of data are excluded from the range).
+        :param upper_quantile: The upper quantile in percentage [0, 1] (e.g., 0.98 means the largest 2% of data are excluded from the range).
+        :param font_size: Font size.
+        :param dpi: Figure DPI.
+        :param title_padding: Title padding.
+        :param show_figure: Flag whether to also show the image figure.
+        :return:
+        """
+        data_range = np.quantile(array, lower_quantile), np.quantile(array, upper_quantile)
+        Visualizer.plot_array_columns(array, output_file, data_range, False, font_size, dpi, title_padding, show_figure)
 
     @staticmethod
     def plot_network(network: NetworkData,
@@ -176,6 +229,7 @@ class Visualizer:
         plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
         if show_figure:
             plt.show()
+        plt.close(figure)
 
     @staticmethod
     def plot_histogram(array: np.ndarray,
@@ -185,7 +239,7 @@ class Visualizer:
                        dpi: int = 100,
                        show_figure: bool = False) -> None:
         """
-        Plots the value histogram of a numpy array using MATLAB plot and saves it to image file.
+        Plots a histogram of the values of numpy array and saves it to image file.
 
         :param array: A numpy array.
         :param output_file: The filename for the output image.
@@ -196,9 +250,34 @@ class Visualizer:
         :return:
         """
 
-        _ = plt.figure(dpi=dpi)
+        figure = plt.figure(dpi=dpi)
         plt.hist(array.flatten(), bins=bins, range=data_range)
 
         plt.savefig(output_file, bbox_inches="tight", dpi=dpi)
         if show_figure:
             plt.show()
+        plt.close(figure)
+
+    @staticmethod
+    def plot_quantiled_histogram(array: np.ndarray,
+                                 output_file: str,
+                                 bins: int = 256,
+                                 lower_quantile: float = 0.02,
+                                 upper_quantile: float = 0.98,
+                                 dpi: int = 100,
+                                 show_figure: bool = False) -> None:
+        """
+        Plots a histogram of the values of numpy array using data quantiles and saves it to image file.
+
+        :param array: A numpy array.
+        :param output_file: The filename for the output image.
+        :param bins: Number of bins.
+        :param lower_quantile: The lower quantile in percentage [0, 1] (e.g., 0.02 means the lowest 2% of data are excluded from the range).
+        :param upper_quantile: The upper quantile in percentage [0, 1] (e.g., 0.98 means the largest 2% of data are excluded from the range).
+        :param dpi: Figure DPI.
+        :param show_figure: Flag whether to also show the image figure.
+        :return:
+        """
+
+        lower, upper = np.quantile(array, lower_quantile), np.quantile(array, upper_quantile)
+        Visualizer.plot_histogram(array, output_file, bins, (lower, upper), dpi, show_figure)

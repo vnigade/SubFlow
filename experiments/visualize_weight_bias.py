@@ -13,15 +13,6 @@ from analysis import NetworkCollection, Visualizer
 # Helpers
 # =================================================================================================
 
-def array_columns_to_list(array: np.ndarray) -> list[np.ndarray]:
-    _, cols = array.shape
-    return [array[:, i].flatten() for i in range(cols)]
-
-
-def quantile(array: np.ndarray, lower: float = 0.05, upper: float = 0.95) -> tuple[float, float]:
-    return np.quantile(array, lower), np.quantile(array, upper)
-
-
 def plot_networks(output_path: str, collection: NetworkCollection) -> None:
     min_weight_value, max_weight_value = collection.weight_minmax
     min_bias_value, max_bias_value = collection.bias_minmax
@@ -32,16 +23,23 @@ def plot_networks(output_path: str, collection: NetworkCollection) -> None:
 
 def plot_network_differences(output_path: str, differences: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]) -> None:
     difference_to_base, difference_to_previous, difference_ratio_to_base, difference_ratio_to_previous = differences
-    Visualizer.plot_arrays(array_columns_to_list(difference_to_base), os.path.join(output_path, "difference_to_base.png"), data_range=None)
-    Visualizer.plot_arrays(array_columns_to_list(difference_to_previous), os.path.join(output_path, "difference_to_previous.png"), data_range=None)
-    Visualizer.plot_arrays(array_columns_to_list(difference_ratio_to_base), os.path.join(output_path, "difference_ratio_to_base.png"), data_range=None)
-    Visualizer.plot_arrays(array_columns_to_list(difference_ratio_to_previous), os.path.join(output_path, "difference_ratio_to_previous.png"), data_range=None)
+    Visualizer.plot_array_columns(difference_to_base, os.path.join(output_path, "difference_to_base.png"))
+    Visualizer.plot_array_columns(difference_to_previous, os.path.join(output_path, "difference_to_previous.png"))
+    Visualizer.plot_array_columns(difference_ratio_to_base, os.path.join(output_path, "difference_ratio_to_base.png"))
+    Visualizer.plot_array_columns(difference_ratio_to_previous, os.path.join(output_path, "difference_ratio_to_previous.png"))
+    Visualizer.plot_quantiled_array_columns(difference_to_base, os.path.join(output_path, "quantiled_difference_to_base.png"))
+    Visualizer.plot_quantiled_array_columns(difference_to_previous, os.path.join(output_path, "quantiled_difference_to_previous.png"))
+    Visualizer.plot_quantiled_array_columns(difference_ratio_to_base, os.path.join(output_path, "quantiled_difference_ratio_to_base.png"))
+    Visualizer.plot_quantiled_array_columns(difference_ratio_to_previous, os.path.join(output_path, "quantiled_difference_ratio_to_previous.png"))
 
 
 def plot_weight_histograms(output_path: str, combined_weights: np.ndarray, difference_to_base: np.ndarray, difference_to_previous: np.ndarray) -> None:
-    Visualizer.plot_histogram(combined_weights, os.path.join(output_path, "histogram_combined_weights.png"), data_range=None)
-    Visualizer.plot_histogram(difference_to_base, os.path.join(output_path, "histogram_difference_to_base.png"), data_range=None)
-    Visualizer.plot_histogram(difference_to_previous, os.path.join(output_path, "histogram_difference_to_previous.png"), data_range=None)
+    Visualizer.plot_histogram(combined_weights, os.path.join(output_path, "histogram_combined_weights.png"))
+    Visualizer.plot_histogram(difference_to_base, os.path.join(output_path, "histogram_difference_to_base.png"))
+    Visualizer.plot_histogram(difference_to_previous, os.path.join(output_path, "histogram_difference_to_previous.png"))
+    Visualizer.plot_quantiled_histogram(combined_weights, os.path.join(output_path, "quantiled_histogram_combined_weights.png"))
+    Visualizer.plot_quantiled_histogram(difference_to_base, os.path.join(output_path, "quantiled_histogram_difference_to_base.png"))
+    Visualizer.plot_quantiled_histogram(difference_to_previous, os.path.join(output_path, "quantiled_histogram_difference_to_previous.png"))
 
 
 # =================================================================================================
@@ -51,8 +49,8 @@ def plot_weight_histograms(output_path: str, combined_weights: np.ndarray, diffe
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="./data/from_scratch_leaky_5epochs.collection", help="The network collection to load.")
-    args.add_argument("--plot_base_folder", type=str, default="./data", help="The folder for outputting the plots.")
+    args.add_argument("--collection_file", type=str, default="./data/progressive_leaky_5epochs.collection", help="The network collection to load.")
+    args.add_argument("--plot_base_folder", type=str, default="./results", help="The folder for outputting the plots.")
     args = args.parse_args()
 
     # Load network collection

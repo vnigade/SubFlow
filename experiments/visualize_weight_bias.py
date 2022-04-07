@@ -51,7 +51,7 @@ def plot_weight_histograms(output_path: str, combined_weights: np.ndarray, diffe
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="./data/from_scratch_collection.pickle", help="The network collection to load.")
+    args.add_argument("--collection_file", type=str, default="./data/from_scratch_leaky_5epochs.collection", help="The network collection to load.")
     args.add_argument("--plot_base_folder", type=str, default="./data", help="The folder for outputting the plots.")
     args = args.parse_args()
 

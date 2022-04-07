@@ -4,8 +4,10 @@ The NetworkData and NetworkCollection classes for loading, saving, and represent
 import numpy as np
 import os
 import pickle
+import tensorflow as tf
 
 from dataclasses import dataclass
+from network import Network
 
 
 @dataclass
@@ -58,6 +60,19 @@ class NetworkData:
             assert layer.bias.dtype == np.float32
 
         return NetworkData(network_name, utilization, layers)
+
+    @staticmethod
+    def load_from_network(network: Network, utilization: float) -> "NetworkData":
+        # Convert the data from the network to a NetworkData structure
+        # todo: get better access to the network layers
+        layers = list()
+        for i, layer in enumerate(network._model.layers):
+            if isinstance(layer, (tf.keras.layers.Dense, tf.keras.layers.Conv2D)):
+                weights = layer.get_weights()[0]
+                bias = layer.get_weights()[1]
+                layers.append(NetworkData.Layer(weights, f"weight_{i}", bias, f"bias_{i}"))
+
+        return NetworkData(network.name, utilization, layers)
 
     def __repr__(self):
         return f"Network '{self.name}' [{self.utilization:.2f} utilization][{self.count} layers]"

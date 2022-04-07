@@ -52,15 +52,7 @@ def load_from_models(base_model_folder: str, epochs: int) -> NetworkCollection:
         network.load(model_directory)
 
         # Convert the data from the network to a NetworkData structure
-        # todo: get better access to the network layers
-        layers = list()
-        for i, layer in enumerate(network._model.layers):
-            if isinstance(layer, (tf.keras.layers.Dense, tf.keras.layers.Conv2D)):
-                weights = layer.get_weights()[0]
-                bias = layer.get_weights()[1]
-                layers.append(NetworkData.Layer(weights, f"weight_{i}", bias, f"bias_{i}"))
-
-        network_data = NetworkData(network.name, float(configuration.utilization) / 100.0, layers)
+        network_data = NetworkData.load_from_network(network, float(configuration.utilization) / 100.0)
         networks.append(network_data)
 
     return NetworkCollection(networks)

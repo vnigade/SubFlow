@@ -215,20 +215,24 @@ def eval_differences(collection: NetworkCollection, differences: NetworkDifferen
 def main():
     # Parse arguments
     args = argparse.ArgumentParser()
-    args.add_argument("--collection_file", type=str, default="./data/progressive_leaky_5epochs.collection", help="The network collection to load.")
-    args.add_argument("--output_directory", type=str, default="./results", help="The output log file.")
+    args.add_argument("--collection_file", type=str, default="./data/from_lenet_leaky_5epochs.collection", help="The network collection to load.")
+    args.add_argument("--output_base_directory", type=str, default="./results", help="The output log file.")
     args.add_argument("--relative_to_base", type=bool, default=True, action=argparse.BooleanOptionalAction, help="Toggles the computation of the differences relative to the previous or base.")
-    args.add_argument("--individual_compression", type=bool, default=True, action=argparse.BooleanOptionalAction, help="Toggles overall or individual network compression.")
+    args.add_argument("--individual_compression", type=bool, default=False, action=argparse.BooleanOptionalAction, help="Toggles overall or individual network compression.")
     args = args.parse_args()
 
-    # Define a base name for the experiment
+    # Create the output base folder (if it not already exists)
     collection_file = pathlib.Path(args.collection_file)
+    output_directory = os.path.join(args.output_base_directory, collection_file.stem)
+    pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
+
+    # Define a base name for the experiment
     relative_to_base_str = "base" if args.relative_to_base else "previous"
     individual_compression_str = "individual" if args.individual_compression else "overall"
-    base_name = f"{collection_file.stem}_{relative_to_base_str}_{individual_compression_str}"
+    base_name = f"{relative_to_base_str}_{individual_compression_str}"
 
     # Setup file logging
-    log_file = os.path.join(args.output_directory, f"{base_name}_compression.log")
+    log_file = os.path.join(output_directory, f"{base_name}_compression.log")
     logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG, format="%(message)s")
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -297,12 +301,12 @@ def main():
         "nonzero_bias_differences_percentage": pd.Series([s.nonzero_bias_differences_percentage for s in all_statistics]),
         "nonzero_byte_size_percentage": pd.Series([s.nonzero_byte_size_percentage for s in all_statistics]),
     }
-    statistics_file = os.path.join(args.output_directory, f"{base_name}_compression_statistics.xlsx")
+    statistics_file = os.path.join(output_directory, f"{base_name}_compression_statistics.xlsx")
     statistics_data_frame = pd.DataFrame(statistics_dict)
     statistics_data_frame.to_excel(statistics_file, index=False)
 
     # Write out evaluated accuracies over the various utilization
-    accuracy_file = os.path.join(args.output_directory, f"{base_name}_compression_accuracy.xlsx")
+    accuracy_file = os.path.join(output_directory, f"{base_name}_compression_accuracy.xlsx")
     accuracy_data_frame = pd.DataFrame(all_accuracies).transpose()
     accuracy_data_frame.to_excel(accuracy_file, index=False)
 

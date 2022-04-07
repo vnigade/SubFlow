@@ -161,7 +161,7 @@ class NetworkData:
 @dataclass
 class NetworkCollection:
     """
-    The NetworkCollection class holds a group of Networks.
+    The NetworkCollection class holds a group of NetworkData instances.
     """
 
     networks: list[NetworkData]
@@ -190,6 +190,12 @@ class NetworkCollection:
 
     @property
     def count(self) -> int:
+        """
+        Returns the number of networks in the collection.
+
+        :return: The number of networks.
+        """
+
         return len(self.networks)
 
     @property
@@ -217,6 +223,66 @@ class NetworkCollection:
         return np.stack([network.stacked_biases for network in self.networks], axis=1)
 
     @property
+    def weights_count(self) -> int:
+        """
+        Returns the number of weights in the collection.
+
+        :return: The number of weights.
+        """
+
+        return self.combined_weights.size
+
+    @property
+    def biases_count(self) -> int:
+        """
+        Returns the number of biases in the collection.
+
+        :return: The number of biases.
+        """
+
+        return self.combined_biases.size
+
+    @property
+    def parameter_count(self) -> int:
+        """
+        Returns the number of parameters in the collection.
+
+        :return: The number of parameters.
+        """
+
+        return self.weights_count + self.biases_count
+
+    @property
+    def nonzero_weights_count(self) -> int:
+        """
+        Returns the number of non-zero weights in the collection.
+
+        :return: The number of non-zero weights.
+        """
+
+        return np.count_nonzero(self.combined_weights)
+
+    @property
+    def nonzero_biases_count(self) -> int:
+        """
+        Returns the number of non-zero biases in the collection.
+
+        :return: The number of non-zero biases.
+        """
+
+        return np.count_nonzero(self.combined_biases)
+
+    @property
+    def nonzero_parameter_count(self) -> int:
+        """
+        Returns the number of non-zero parameters in the collection.
+
+        :return: The number of non-zero parameters.
+        """
+
+        return self.nonzero_weights_count + self.nonzero_biases_count
+
+    @property
     def weight_minmax(self) -> tuple[float, float]:
         """
         Returns the min/max value over all the weights of all networks.
@@ -237,3 +303,49 @@ class NetworkCollection:
 
         flattened_biases = self.combined_biases.flatten()
         return np.min(flattened_biases), np.max(flattened_biases)
+
+    @property
+    def weight_magnitude_average(self) -> float:
+        """
+        Returns the average magnitude over all the weights of all networks.
+
+        :return: The average weight magnitude.
+        """
+
+        flattened_weights = self.combined_weights.flatten()
+        return float(np.mean(np.abs(flattened_weights)))
+
+    @property
+    def bias_magnitude_average(self) -> float:
+        """
+        Returns the average magnitude over all the biases of all networks.
+
+        :return: The average bias magnitude.
+        """
+
+        flattened_biases = self.combined_biases.flatten()
+        return float(np.mean(np.abs(flattened_biases)))
+
+    @property
+    def byte_size(self) -> int:
+        """
+        Returns the size of the whole network collection in bytes.
+
+        :return: The size in bytes.
+        """
+
+        assert self.combined_weights.dtype == np.float32
+        assert self.combined_biases.dtype == np.float32
+        return self.parameter_count * 4
+
+    @property
+    def nonzero_byte_size(self) -> int:
+        """
+        Returns the size in bytes of the network collection counting only the non-zero parameters.
+
+        :return: The size in bytes.
+        """
+
+        assert self.combined_weights.dtype == np.float32
+        assert self.combined_biases.dtype == np.float32
+        return self.nonzero_parameter_count * 4

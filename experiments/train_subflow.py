@@ -4,8 +4,8 @@ Trains the SubFlow models from scratch.
 import argparse
 import os
 
+from data.mnist import load_data
 from network import LeNetConfiguration, SubFlowLeNetConfiguration, Trainer
-from network.mnist import load_data
 
 
 # =================================================================================================

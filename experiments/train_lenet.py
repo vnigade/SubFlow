@@ -4,8 +4,8 @@ Trains the LeNet baseline models.
 import argparse
 import os
 
+from data.mnist import load_data
 from network import LeNetConfiguration, SimpleLeNetConfiguration, Trainer
-from network.mnist import load_data
 
 
 def main():

@@ -8,9 +8,10 @@ import pathlib
 # Disable tensorflow warnings
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+from data.mnist import load_data, sample_examples
+from data.visualizer import display_examples
 from collections import defaultdict
 from network import BaseConfiguration, SubFlow, SubFlowLeNetConfiguration
-from network.mnist import load_data, display_examples
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
     args.add_argument("--model_base_directory", type=str, default="./models", help="The network model base directory.")
     args.add_argument("--epochs", type=int, default=5, help="The number of training epochs.")
     args.add_argument("--seed", type=int, default=123456789, help="The random seed for activation mask sampling.")
-    args.add_argument("--display_examples", type=bool, default=False, action=argparse.BooleanOptionalAction, help="Displays some examples using MATPLOTLIB.")
+    args.add_argument("--display_examples", type=int, default=0, help="Number of random examples to display with MATPLOTLIB.")
     args = args.parse_args()
 
     # Load MNIST dataset
@@ -63,8 +64,11 @@ def main():
             print(f"utilization={configuration.utilization}, leaky_relu={configuration.leaky_relu}, initialization_directory={configuration.initialization_directory}: {metrics}")
 
             # Display some examples
-            if args.display_examples:
-                display_examples(network, test)
+            if args.display_examples > 0:
+                examples, indices = sample_examples((x_test, y_test), args.display_examples)
+                x_examples, _ = examples
+                predictions = network.predict(x_examples)
+                display_examples(*examples, predictions, indices)
 
         print()
 

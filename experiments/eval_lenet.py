@@ -4,8 +4,9 @@ Evaluates the LeNet baseline model.
 import argparse
 import os
 
+from data.mnist import load_data, sample_examples
+from data.visualizer import display_examples
 from network import LeNet, LeNetConfiguration, SimpleLeNet, SimpleLeNetConfiguration
-from network.mnist import load_data, display_examples
 
 
 def main():
@@ -13,7 +14,7 @@ def main():
     args = argparse.ArgumentParser()
     args.add_argument("--model_base_directory", type=str, default="./models", help="The network model base directory.")
     args.add_argument("--epochs", type=int, default=5, help="The number of training epochs.")
-    args.add_argument("--display_examples", type=bool, default=False, action=argparse.BooleanOptionalAction, help="Displays some examples using MATPLOTLIB.")
+    args.add_argument("--display_examples", type=int, default=0, help="Number of random examples to display with MATPLOTLIB.")
     args = args.parse_args()
 
     # Load MNIST dataset
@@ -47,8 +48,11 @@ def main():
         print(f"{network.name} (epochs={configuration.epochs}, leaky_relu={configuration.leaky_relu}): {metrics}")
 
         # Display some examples
-        if args.display_examples:
-            display_examples(network, test)
+        if args.display_examples > 0:
+            examples, indices = sample_examples((x_test, y_test), args.display_examples)
+            x_examples, _ = examples
+            predictions = network.predict(x_examples)
+            display_examples(*examples, predictions, indices)
 
 
 if __name__ == "__main__":

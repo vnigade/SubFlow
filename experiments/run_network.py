@@ -6,8 +6,9 @@ import enum
 import os
 import tensorflow as tf
 
+from data.mnist import load_data, sample_examples
+from data.visualizer import display_examples
 from network import LeNet, SimpleLeNet, SubFlow
-from network.mnist import load_data, display_examples
 
 
 # =================================================================================================
@@ -31,7 +32,7 @@ def main():
     args.add_argument("--leaky_relu", default=True, help="Use leaky ReLus instead of normal ones.")
     args.add_argument("--utilization", type=int, default=20, help="The network utilization in percentage (integer values 1 to 100) [SubFlow only].")
     args.add_argument("--seed", type=int, default=123456789, help="The random seed for activation mask sampling [SubFlow only].")
-    args.add_argument("--display_examples", default=False, help="If True, displays some examples using MATPLOTLIB.")
+    args.add_argument("--display_examples", type=int, default=0, help="Number of random examples to display with MATPLOTLIB.")
     args = args.parse_args()
 
     # Load MNIST dataset
@@ -56,12 +57,15 @@ def main():
 
     # network.preload()
     output_directory = os.path.join(args.model_base_directory, network.name)
-    network.train(output_directory, x_train, y_train, args.epochs, clear_folder=True)
+    network.train(output_directory, x_train, y_train, args.epochs)
     network.evaluate(x_test, y_test)
 
     # Display some examples
-    if args.display_examples:
-        display_examples(network, test)
+    if args.display_examples > 0:
+        examples, indices = sample_examples((x_test, y_test), args.display_examples)
+        x_examples, _ = examples
+        predictions = network.predict(x_examples)
+        display_examples(*examples, predictions, indices)
 
 
 if __name__ == "__main__":

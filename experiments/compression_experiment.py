@@ -13,8 +13,8 @@ import tensorflow as tf
 
 from analysis import NetworkCollection, NetworkData, NetworkDifference, NetworkDifferenceCollection
 from dataclasses import dataclass
+from data.mnist import load_data
 from network import SubFlow
-from network.mnist import load_data
 
 
 # =================================================================================================

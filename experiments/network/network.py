@@ -143,11 +143,11 @@ class Network:
         self._model.summary(print_fn=lambda x: lines.append(x))
         return "\n".join(lines)
 
-    def train(self, output_directory: str, x: np.ndarray, y: np.ndarray, epochs: int) -> tf.keras.callbacks.History:
+    def train(self, output_directory: Optional[str], x: np.ndarray, y: np.ndarray, epochs: int) -> tf.keras.callbacks.History:
         """
         Trains the model.
 
-        :param output_directory: The output directory for the training checkpoints and final model.
+        :param output_directory: The output directory for the training checkpoints and final model or None.
         :param x: The input training data (features).
         :param y: The output training data (labels).
         :param epochs: Number of epochs to train.
@@ -155,25 +155,30 @@ class Network:
         """
 
         # Setup training callback functions
-        callbacks = [
-            tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1),
-            tf.keras.callbacks.CSVLogger(os.path.join(output_directory, "training.csv"), append=True, separator=";")
-        ]
+        callbacks = []
+
+        if output_directory:
+            callbacks += [
+                tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1),
+                tf.keras.callbacks.CSVLogger(os.path.join(output_directory, "training.csv"), append=True, separator=";")
+            ]
 
         if epochs > 0:
             # Train the model
             history = self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
 
             # Store the loss and metrics history
-            for key, value in history.history.items():
-                array = np.array(value)
-                np.savetxt(os.path.join(output_directory, f"history_{key}.txt"), array, delimiter=",")
+            if output_directory:
+                for key, value in history.history.items():
+                    array = np.array(value)
+                    np.savetxt(os.path.join(output_directory, f"history_{key}.txt"), array, delimiter=",")
         else:
             history = tf.keras.callbacks.History()
 
         # Save the whole model
-        model_path = os.path.join(output_directory, f"{self._name}.model")
-        self._model.save(model_path)
+        if output_directory:
+            model_path = os.path.join(output_directory, f"{self._name}.model")
+            self._model.save(model_path)
 
         return history
 

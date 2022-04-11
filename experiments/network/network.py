@@ -156,15 +156,14 @@ class Network:
 
         # Setup training callback functions
         callbacks = []
-
         if output_directory:
             callbacks += [
                 tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(output_directory, "{epoch:04d}.checkpoint"), save_weights_only=True, verbose=1),
                 tf.keras.callbacks.CSVLogger(os.path.join(output_directory, "training.csv"), append=True, separator=";")
             ]
 
+        # Train the model
         if epochs > 0:
-            # Train the model
             history = self._model.fit(x, y, epochs=epochs, callbacks=callbacks)
 
             # Store the loss and metrics history

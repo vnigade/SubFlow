@@ -14,18 +14,12 @@ import models
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-# np.set_printoptions(threshold=np.nan)
 save_filename = os.path.splitext(os.path.basename(__file__))[0] + '.obj'
 
 sub_conv2d_library = tf.load_op_library(
     './sub_conv2d.so')
 sub_matmul_library = tf.load_op_library(
     './sub_matmul.so')
-
-# sub_conv2d_library = tf.load_op_library(
-#     '/home/vinod/remote_files/das5/scratch/packages/SubFlow/sub_conv2d.so')
-# sub_matmul_library = tf.load_op_library(
-#     '/home/vinod/remote_files/das5/scratch/packages/SubFlow/sub_matmul.so')
 
 
 @ops.RegisterGradient("SubConv")
@@ -147,8 +141,7 @@ class Network:
 
         self.network_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                         'network' + str(self.network_no))
-        # self.network_dir = os.path.join("/home/vinod/remote_files/das5/scratch/packages/SubFlow",
-        #                                 'network' + str(self.network_no))
+
         self.network_file_name = 'network' + str(self.network_no)
         self.network_file_path = os.path.join(
             self.network_dir, self.network_file_name)
@@ -275,10 +268,6 @@ class Network:
                     neuron = tf.nn.leaky_relu(tf.add(tf.matmul(neuron_drop,
                                                                fc_parameter['weights']), fc_parameter['biases']),
                                               name=neuron_name)
-                    # neuron = tf.nn.sigmoid(tf.add(tf.matmul(neuron_drop,
-                    # fc_parameter['weights']), fc_parameter['biases']),
-                    # name=neuron_name)
-
                 elif layer_type[layer_no] == "output":
                     y_b = tf.add(tf.matmul(neuron_drop, fc_parameter['weights']),
                                  fc_parameter['biases'])
@@ -286,9 +275,6 @@ class Network:
                                        tf.reduce_sum(
                                            tf.exp(y_b-tf.reduce_max(y_b))),
                                        name=neuron_name)
-                    # neuron = tf.nn.softmax(tf.matmul(neuron_drop,
-                    # fc_parameter['weights']) + fc_parameter['biases'],
-                    # name=neuron_name)
 
                 neurons[layer_no] = neuron
                 outputs[layer_no] = tf.identity(neuron, name=output_name)
@@ -337,20 +323,14 @@ class Network:
                 train_iteration, epochs):
         print("doTrain")
 
-        # get tensors
-        tensor_x_name = "neuron_0:0"
         x = graph.get_tensor_by_name("neuron_0:0")
         y = graph.get_tensor_by_name(f"neuron_{len(self.layers)-1}:0")
         y_ = graph.get_tensor_by_name("y_:0")
         keep_prob_input = graph.get_tensor_by_name("keep_prob_input:0")
         keep_prob = graph.get_tensor_by_name("keep_prob:0")
         accuracy = graph.get_tensor_by_name("accuracy:0")
-        # apply_gradients = graph.get_operation_by_name("apply_gradients")
         optimizer = graph.get_operation_by_name("optimizer")
 
-        bias_name = self.bias_base_name + str(2)
-
-        input_data_validation = validation_set[0]
         # Reshape the input data into NHWC. @NOTE: The layers are defined is in NHWC.
         input_data_validation_reshaped = np.reshape(validation_set[0],
                                                     ([-1] + x.get_shape().as_list()[1:]))
@@ -374,43 +354,15 @@ class Network:
                     np.reshape(
                         input_data, ([-1] + x.get_shape().as_list()[1:]))
 
-                # if i % (100) == 0 or i == (train_iteration-1):
-                #     train_accuracy = sess.run(accuracy, feed_dict={
-                #         x: input_data_reshaped,
-                #         y_: labels, keep_prob_input: 1.0, keep_prob: 1.0})
-                #     print("step %d, training accuracy: %f" %
-                #           (i, train_accuracy))
-
-                #     test_accuracy = sess.run(accuracy, feed_dict={
-                #         x: input_data_validation_reshaped, y_: labels_validation,
-                #         keep_prob_input: 1.0, keep_prob: 1.0})
-                #     print("step %d, Validation accuracy: %f" %
-                #           (i, test_accuracy))
-                #     print(bias)
-
-                #     if i == 0:
-                #         highest_accuracy = test_accuracy
-                #     else:
-                #         if test_accuracy > highest_accuracy:
-                #             self.saveNetwork(sess)
-                #             highest_accuracy = test_accuracy
-                #             print('saveNetwork for', highest_accuracy)
-
                 sess.run(optimizer, feed_dict={x: input_data_reshaped,
                                                y_: labels, keep_prob_input: 1.0, keep_prob: 1.0})
 
             val_accuracy = sess.run(accuracy, feed_dict={
                 x: input_data_validation_reshaped, y_: labels_validation,
                 keep_prob_input: 1.0, keep_prob: 1.0})
-            print("epcoh %d, Validation accuracy: %f" %
+            print("epoch %d, Validation accuracy: %f" %
                   (epoch, val_accuracy))
 
-            # output = sess.run(y, feed_dict={
-            #     x: input_data_validation_reshaped, y_: labels_validation,
-            #     keep_prob_input: 1.0, keep_prob: 1.0})
-            # for i in range(labels_validation.shape[0]):
-            #     print(
-            #         f"Label: pred, true: {output.shape} {np.argmax(labels_validation[i])}")
             if val_accuracy > highest_accuracy:
                 highest_accuracy = val_accuracy
                 self.saveNetwork(sess)
@@ -422,7 +374,6 @@ class Network:
                 self.loadNetwork(sess)
                 self.doTrain(sess, graph, train_set, validation_set, batch_size,
                              train_iteration, epochs)
-                # self.saveNetwork(sess)
 
     def doInfer(self, sess, graph, data_set, label=None):
         tensor_x_name = "neuron_0:0"
@@ -437,17 +388,16 @@ class Network:
             data_set, ([-1] + x.get_shape().as_list()[1:]))
         infer_result = sess.run(y, feed_dict={
             x: data_set_reshaped, keep_prob_input: 1.0, keep_prob: 1.0})
-        # print(infer_result)
-        # print(infer_result.shape)
 
+        test_accuracy = None
         if label is not None:
-            # validate (this is for test)
-            y_ = graph.get_tensor_by_name("y_:0")
-            accuracy = graph.get_tensor_by_name("accuracy:0")
-            test_accuracy = sess.run(accuracy, feed_dict={
-                x: data_set_reshaped, y_: label, keep_prob_input: 1.0,
-                keep_prob: 1.0})
-            print("Inference accuracy: %f" % test_accuracy)
+            predicted_samples = 0
+            total_samples = label.shape[0]
+            for pred, gt in zip(infer_result, label):
+                if np.argmax(pred) == np.argmax(gt):
+                    predicted_samples += 1
+            test_accuracy = predicted_samples / total_samples
+            print("Validation Inference accuracy:1.0=%f" % test_accuracy)
 
         return infer_result
 
@@ -470,7 +420,6 @@ class Network:
         start_index = batch_index*batch_size
         end_index = start_index + batch_size
         data_num = indices[start_index: end_index]
-        # print(f"Using frame indices {data_num}")
 
         batch = data[data_num, :]
         label = label[data_num, :]  # one-hot vectors
@@ -577,7 +526,6 @@ class Network:
 
         for layer_no in range(1, len(self.layers)):
             if len(self.layers[layer_no]) >= 4:  # conv
-                # output_name = self.neuron_base_name + str(layer_no)
                 output_name = self.output_base_name + str(layer_no)
             else:
                 output_name = self.neuron_base_name + str(layer_no)
@@ -613,10 +561,6 @@ class Network:
                 s = sess.run(importance, feed_dict={x: input_data_reshaped,
                         y_: labels, keep_prob_input: 1.0, keep_prob: 1.0})
                 """
-
-                # gradient = tf.gradients(cross_entropy, neurons[i])
-                # hessian_approximate = tf.square(gradient[0])
-                # importance = hessian_approximate * tf.square(neurons[i])
                 print(importance_lst[i])
                 s = sess.run(importance_lst[i], feed_dict={x: input_data_reshaped,
                                                            y_: labels, keep_prob_input: 1.0, keep_prob: 1.0})
@@ -625,6 +569,64 @@ class Network:
                     output_importance_sum[i] = s
                 else:
                     output_importance_sum[i] += s
+
+        for i in range(len(output_importance_sum)):
+            output_importance_sum[i] = np.squeeze(
+                output_importance_sum[i], axis=0)
+            if len(output_importance_sum[i].shape) == 3:
+                output_importance_sum[i] = np.transpose(
+                    output_importance_sum[i], (2, 0, 1))
+
+        return output_importance_sum
+
+    def compute_activation_magnitude(self, sess, graph, train_set, sample_size):
+        print('compute_activation_magnitude')
+
+        # get tensors
+        x = graph.get_tensor_by_name("neuron_0:0")
+        y_ = graph.get_tensor_by_name("y_:0")
+        keep_prob_input = graph.get_tensor_by_name("keep_prob_input:0")
+        keep_prob = graph.get_tensor_by_name("keep_prob:0")
+
+        neurons = []
+        output = graph.get_tensor_by_name(self.neuron_base_name + '0:0')
+        neurons.append(output)
+
+        for layer_no in range(1, len(self.layers)):
+            if len(self.layers[layer_no]) >= 4:  # conv
+                output_name = self.output_base_name + str(layer_no)
+            else:
+                output_name = self.neuron_base_name + str(layer_no)
+            output = graph.get_tensor_by_name(output_name + ':0')
+            neurons.append(output)
+
+        output_importance_sum = [None] * len(neurons)
+
+        importance_lst = neurons
+
+        n_train_samples = train_set[0].shape[0]
+        indices = np.arange(n_train_samples)
+        np.random.shuffle(indices)
+
+        for k in range(sample_size):
+            print('sample', k)
+
+            input_data, labels = self.next_batch(train_set, 1, k, indices)
+            input_data_reshaped = \
+                np.reshape(input_data, ([-1] + x.get_shape().as_list()[1:]))
+
+            output_importance = sess.run(importance_lst, feed_dict={x: input_data_reshaped,
+                                                                    y_: labels,
+                                                                    keep_prob_input: 1.0,
+                                                                    keep_prob: 1.0})
+
+            assert len(output_importance_sum) == len(output_importance)
+
+            for i in range(len(neurons)):
+                if output_importance_sum[i] is None:
+                    output_importance_sum[i] = output_importance[i]
+                else:
+                    output_importance_sum[i] += output_importance[i]
 
         for i in range(len(output_importance_sum)):
             output_importance_sum[i] = np.squeeze(
@@ -647,9 +649,6 @@ class Network:
                 old_importance[i] = old_importance[i] + importance[i]
             new_importance = old_importance
 
-        # for i in range(len(new_importance)):
-        #	print(new_importance[i])
-
         # Random
         # new_importance = [None] * len(importance)
         # for i in range(len(importance)):
@@ -662,16 +661,14 @@ class Network:
         importance = np.load(importance_file_path, allow_pickle=True)
         return importance
 
-    def compute_importance(self, dataset, sample_size, per_class_flag):
+    def compute_importance(self, dataset, sample_size):
 
         # Compute importance for all classes at once.
-        if not per_class_flag:
-            print("Computing importance on all classes")
-            train_set = dataset.train_set(class_id=None)
-            validation_set = dataset.validation_set(class_id=None)
-            self._compute_importance(
-                train_set, validation_set, sample_size, self.importance_file_path)
-            return
+        print("Computing importance on all classes")
+        train_set = dataset.train_set(class_id=None)
+        validation_set = dataset.validation_set(class_id=None)
+        self._compute_importance(
+            train_set, validation_set, sample_size, self.importance_file_path)
 
         # Compute importance per class separately
         for class_id in range(dataset.NUM_CLASSES):
@@ -690,8 +687,10 @@ class Network:
         with tf.Graph().as_default() as graph:
             with tf.Session(graph=graph) as sess:
                 self.loadNetwork(sess)  # Load the entire DNN
-                importance = self.update_output_hessians(
-                    sess, graph, train_set, sample_size)  # Passes only the training data
+                # importance = self.update_output_hessians(
+                #     sess, graph, train_set, sample_size)  # Passes only the training data
+                importance = self.compute_activation_magnitude(
+                    sess, graph, train_set, sample_size)
                 self.save_importance(importance, importance_file_path)
 
 
@@ -748,14 +747,12 @@ class SubFlowNetwork:
 
         keep_prob_input = tf.placeholder(tf.float32, name='keep_prob_input')
         keep_prob = tf.placeholder(tf.float32, name='keep_prob')
-        # :XXX This is so wrong. The actual full network has NHWC as input layer
+        # :XXX. The actual full network has NHWC as input layer
         # and this has NCHW
         neurons[0] = tf.placeholder(tf.float32,
                                     [None, layers[0][2], layers[0]
                                         [0], layers[0][1]],
                                     name=self.neuron_base_name+'0')
-        # neurons[0] = tf.placeholder(tf.float32, [None] + layers[0],
-        #                             name=self.neuron_base_name+'0')
         outputs[0] = tf.identity(neurons[0], name=self.neuron_base_name+'0')
         print(neurons[0])
 
@@ -929,7 +926,7 @@ class SubFlowNetwork:
         saver.save(sess, self.network_file_path)
 
     def do_sub_train(self, sess, graph, train_set, validation_set, batch_size,
-                     train_iteration, activation, utilization, epochs):
+                     train_iteration, activation, epochs):
         print("do_sub_train")
 
         # get tensors
@@ -954,11 +951,8 @@ class SubFlowNetwork:
         data_list.append(1.0)  # keep_prob_input
         data_list.append(1.0)  # keep_prob
 
-        input_data_validation = validation_set[0]
         # Reshape the input data into NCHW. The input could be in flattened or NHWC format which is required
         # for the full network. The layers are defined in NHWC.
-        # input_data_validation_reshaped = np.reshape(validation_set[0],
-        #                                             ([-1] + x.get_shape().as_list()[1:]))
         input_data_validation_reshaped = np.reshape(
             validation_set[0], ([-1] + self.layers[0]))
         # Transpose to convert it to NCHW
@@ -966,11 +960,6 @@ class SubFlowNetwork:
             input_data_validation_reshaped, (0, 3, 1, 2))
 
         labels_validation = validation_set[1]
-
-        highest_accuracy = 0
-
-        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        run_metadata = tf.RunMetadata()
 
         # train
         n_train_samples = train_set[0].shape[0]
@@ -988,44 +977,8 @@ class SubFlowNetwork:
                 input_data_reshaped = np.transpose(
                     input_data_reshaped, (0, 3, 1, 2))
 
-                # if i % (100) == 0 or i == (train_iteration-1):
-                #     tensor_feed = tensor_list + [x, y_]
-                #     data_feed = data_list + [input_data_reshaped, labels]
-                #     train_accuracy = sess.run(accuracy, feed_dict={
-                #         t: d for t, d in zip(tensor_feed, data_feed)})
-                #     print("step %d, training accuracy: %f" %
-                #           (i, train_accuracy))
-
-                #     tensor_feed = tensor_list + [x, y_]
-                #     data_feed = data_list + \
-                #         [input_data_validation_reshaped, labels_validation]
-                #     test_accuracy = sess.run(accuracy, feed_dict={
-                #         t: d for t, d in zip(tensor_feed, data_feed)})
-                #     print("step %d, Validation accuracy: %f" %
-                #           (i, test_accuracy))
-
-                #     if i == 0:
-                #         highest_accuracy = test_accuracy
-                #     else:
-                #         if test_accuracy > highest_accuracy:
-                #             self.saveNetwork(sess)
-                #             highest_accuracy = test_accuracy
-                #             print('saveNetwork for', highest_accuracy)
-
                 tensor_feed = tensor_list + [x, y_]
                 data_feed = data_list + [input_data_reshaped, labels]
-                # if i % (100) == 0 or i == (train_iteration-1):
-                #     sess.run(optimizer, feed_dict={
-                #         t: d for t, d in zip(tensor_feed, data_feed)},
-                #         options=run_options, run_metadata=run_metadata)
-
-                #     tl = timeline.Timeline(run_metadata.step_stats)
-                #     ctf = tl.t()
-                #     trace_filename = os.path.join(
-                #         self.network_dir, 'train_' + str(utilization) + '.json')
-                #     with open(trace_filename, 'w') as f:
-                #         f.write(ctf)
-                # else:
                 sess.run(optimizer, feed_dict={
                     t: d for t, d in zip(tensor_feed, data_feed)})
 
@@ -1068,9 +1021,6 @@ class SubFlowNetwork:
                 length = np.prod(importance[i].shape)
                 activation = np.zeros(length, dtype=np.int32)
                 num_of_active_output = int(np.floor(length * utilization))
-                # arg_sort = np.argsort(importance[i].ravel())[
-                #     ::-1][:num_of_active_output]
-                # activation[arg_sort] = 1
                 if not random_mask:
                     indices = sorted_indices(
                         importance[i], num_of_active_output)
@@ -1084,7 +1034,6 @@ class SubFlowNetwork:
 
             activation_list.append(activation)
 
-        real_utilization = float(len_active_output) / len_output
         print('utilization %f' % utilization)
 
         return activation_list
@@ -1125,8 +1074,6 @@ class SubFlowNetwork:
         data_list.append(1.0)  # keep_prob
 
         # infer
-        # data_set_reshaped = np.reshape(
-        #     data_set, ([-1] + x.get_shape().as_list()[1:]))
         data_set_reshaped = np.reshape(data_set, ([-1] + self.layers[0]))
         data_set_reshaped = np.transpose(data_set_reshaped, (0, 3, 1, 2))
 
@@ -1135,54 +1082,35 @@ class SubFlowNetwork:
         tensor_feed = tensor_list + [x]
         data_feed = data_list + [data_set_reshaped]
 
-        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        run_metadata = tf.RunMetadata()
-
         infer_result = sess.run(y, feed_dict={
-            t: d for t, d in zip(tensor_feed, data_feed)},
-            options=run_options, run_metadata=run_metadata)
-
-        tl = timeline.Timeline(run_metadata.step_stats)
-        ctf = tl.generate_chrome_trace_format()
-        trace_filename = os.path.join(
-            self.network_dir, 'infer_' + str(utilization) + '.json')
-        with open(trace_filename, 'w') as f:
-            f.write(ctf)
+            t: d for t, d in zip(tensor_feed, data_feed)})
 
         test_accuracy = None
         if label is not None:
-            # validate (this is for test)
-            y_ = graph.get_tensor_by_name("y_:0")
-            accuracy = graph.get_tensor_by_name("accuracy:0")
-
-            tensor_feed = tensor_list + [x, y_]
-            data_feed = data_list + [data_set_reshaped, label]
-            test_accuracy = sess.run(accuracy, feed_dict={
-                t: d for t, d in zip(tensor_feed, data_feed)})
-            print("Validation Inference accuracy:%f=%f" %
-                  (utilization, test_accuracy))
+            predicted_samples = 0
+            total_samples = label.shape[0]
+            for pred, gt in zip(infer_result, label):
+                if np.argmax(pred) == np.argmax(gt):
+                    predicted_samples += 1
+            test_accuracy = predicted_samples / total_samples
+            print("Validation Inference accuracy:%f=%f, (pred/total)=(%d/%d)" %
+                  (utilization, test_accuracy, predicted_samples, total_samples))
 
         return infer_result, test_accuracy
 
-    def sub_infer(self, dataset, utilization, per_class_flag):
-        # Compute inference for all classes at once.
-        if not per_class_flag:
-            print("Computing inference on all classes")
-            test_set = dataset.test_set(class_id=None)
-            _, test_accuracy = self._sub_infer(test_set[0], utilization=utilization, label=test_set[1],
-                                               importance_file_path=self.network.importance_file_path)
-            print("All classes overall validation inference accuracy:%f=%f" %
-                  (utilization, test_accuracy))
-            return
-
+    def sub_infer(self, dataset, utilization, use_class_importance):
         # Compute inference per class separately
         acc_per_class = []
         samples_per_class = []
         for class_id in range(dataset.NUM_CLASSES):
             print(f"Computing inference on class {class_id}")
             test_set = dataset.test_set(class_id=class_id)
-            importance_file_path = os.path.join(self.network.network_dir,
-                                                self.network.importance_file_name + f'_classid_{class_id}.npy')
+            if use_class_importance:
+                importance_file_path = os.path.join(self.network.network_dir,
+                                                    self.network.importance_file_name + f'_classid_{class_id}.npy')
+            else:
+                importance_file_path = self.network.importance_file_path
+
             _, test_accuracy = self._sub_infer(test_set[0], utilization=utilization, label=test_set[1],
                                                importance_file_path=importance_file_path)
             print("Class %d validation inference accuracy:%f=%f" %
@@ -1210,8 +1138,6 @@ class SubFlowNetwork:
         data = data_set[0]
         label = data_set[1]  # one-hot vectors
 
-        # data_num = np.random.choice(
-        #     data.shape[0], size=batch_size, replace=False)
         start_index = batch_index*batch_size
         end_index = start_index + batch_size
         data_num = indices[start_index: end_index]
@@ -1486,7 +1412,7 @@ def main(args):
         print('[ci] network_no:', args.network_no)
         print('[ci] data:', args.data,
               'train/test.size:', data.train_set()[0].shape, data.test_set()[0].shape)
-        print('[ci] per_class_flag:', args.per_class_flag)
+        print('[ci] use_class_importance:', args.use_class_importance)
 
         import calendar
         ts = calendar.timegm(time.gmtime())
@@ -1495,10 +1421,7 @@ def main(args):
 
         for network in ng.network_list:
             if network[0] == args.network_no:
-                # network[1].compute_importance(
-                #     data.train_set(), data.test_set(), 100)
-                network[1].compute_importance(
-                    data, sample_size=100, per_class_flag=args.per_class_flag)
+                network[1].compute_importance(data, sample_size=100)
 
     elif args.mode == 'sc':
         print('[sc] constructing a sub_network')
@@ -1540,15 +1463,10 @@ def main(args):
             ts = calendar.timegm(time.gmtime())
             seed = ts % 10000
             np.random.seed(seed)
-            utilization_settings = np.arange(0.1, 1.1, 0.1)
-            train_number = 100
-            # utilization = utilization_settings[np.random.randint(len(utilization_settings),
-            #                                                      size=train_number)]
 
             utilization = []
             for i in np.arange(1.0, 0.0, -0.1):
                 utilization.extend([i] * 10)
-            # print(utilization)
         else:
             # utilization = [args.utilization] * args.epochs
             utilization = [args.utilization]
@@ -1582,8 +1500,6 @@ def main(args):
             seed = ts % 10000
             np.random.seed(seed)
             utilization = np.arange(0.1, 1.1, 0.1)
-            # utilization = [ 0.1, 0.1, 0.1, 0.1 ]
-            # print(utilization)
         else:
             utilization = [args.utilization]
 
@@ -1594,10 +1510,8 @@ def main(args):
         for sub_network in ng.sub_network_list:
             if sub_network[0] == args.subflow_network_no:
                 for i in range(len(utilization)):
-                    # sub_network[1].sub_infer(data.test_set()[0], utilization[i],
-                    #                          data.test_set()[1])
                     sub_network[1].sub_infer(data, utilization[i],
-                                             per_class_flag=args.per_class_flag)
+                                             use_class_importance=args.use_class_importance)
                 return
 
         print("no sub_network", args.subflow_network_no)
@@ -1631,8 +1545,8 @@ def parse_arguments(argv):
     parser.add_argument('-save', type=bool, help='save SubFlow?', default=True)
     parser.add_argument('-epochs', type=int,
                         help='SubFlow training epochs', default=1)
-    parser.add_argument('-per_class_flag', type=int, default=0, choices=[0, 1],
-                        help="Integer flag to perform per class operations")
+    parser.add_argument('-use_class_importance', type=int, default=0, choices=[0, 1],
+                        help="Integer flag to use per class neuron importance")
 
     return parser.parse_args(argv)
 
